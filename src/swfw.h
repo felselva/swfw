@@ -186,6 +186,7 @@ struct swfw_window_wl {
 	struct wl_shell_surface *shell_surface;
 	struct wl_region *region;
 	struct swfw_context_wl *swfw_ctx_wl;
+	bool use_hardware_acceleration;
 #ifdef SWFW_EGL
 	struct wl_egl_window *egl_window;
 	struct swfw_egl_context swfw_egl_ctx;

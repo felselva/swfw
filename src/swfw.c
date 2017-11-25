@@ -517,9 +517,11 @@ enum swfw_status swfw_window_swap_buffers_wl(struct swfw_window_wl *swfw_win_wl)
 {
 	enum swfw_status status = SWFW_OK;
 #ifdef SWFW_EGL
-	eglSwapBuffers(swfw_win_wl->swfw_egl_ctx.display, swfw_win_wl->swfw_egl_ctx.surface);
-	if (eglGetError() != EGL_SUCCESS) {
-		status = SWFW_ERROR;
+	if (swfw_win_wl->use_hardware_acceleration) {
+		eglSwapBuffers(swfw_win_wl->swfw_egl_ctx.display, swfw_win_wl->swfw_egl_ctx.surface);
+		if (eglGetError() != EGL_SUCCESS) {
+			status = SWFW_ERROR;
+		}
 	}
 #endif
 	return status;
@@ -539,7 +541,7 @@ static void shell_surface_configure(void *data, struct wl_shell_surface *shell_s
 {
 	struct swfw_window_wl *swfw_win_wl = data;
 #ifdef SWFW_EGL
-	if (swfw_win_wl->egl_window) {
+	if (swfw_win_wl->use_hardware_acceleration) {
 		wl_egl_window_resize(swfw_win_wl->egl_window, width, height, 0, 0);
 	}
 #endif
@@ -589,32 +591,35 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 	wl_surface_set_opaque_region(swfw_win_wl->surface, swfw_win_wl->region);
 	wl_surface_commit(swfw_win_wl->surface);
 	wl_region_destroy(swfw_win_wl->region);
+	swfw_win_wl->use_hardware_acceleration = hints.use_hardware_acceleration;
 #ifdef SWFW_EGL
-	if (initialize_egl(&swfw_win_wl->swfw_egl_ctx, swfw_ctx_wl->display) != SWFW_OK) {
-		abort();
-	}
-	if (swfw_egl_get_config(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
-		abort();
-	}
-	swfw_win_wl->egl_window = wl_egl_window_create(swfw_win_wl->surface,
-		hints.width, hints.height);
-	if (!swfw_win_wl->egl_window) {
-		abort();
-	}
-	if (swfw_egl_create_context(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
-		abort();
-	}
-	if (swfw_egl_create_surface(&swfw_win_wl->swfw_egl_ctx, (EGLNativeWindowType)swfw_win_wl->egl_window) != SWFW_OK) {
-		abort();
-	}
-	if (swfw_egl_make_current(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
-		abort();
-	}
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glFlush();
-	if (swfw_window_swap_buffers_wl(swfw_win_wl) != SWFW_OK) {
-		abort();
+	if (swfw_win_wl->use_hardware_acceleration) {
+		if (initialize_egl(&swfw_win_wl->swfw_egl_ctx, swfw_ctx_wl->display) != SWFW_OK) {
+			abort();
+		}
+		if (swfw_egl_get_config(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
+			abort();
+		}
+		swfw_win_wl->egl_window = wl_egl_window_create(swfw_win_wl->surface,
+			hints.width, hints.height);
+		if (!swfw_win_wl->egl_window) {
+			abort();
+		}
+		if (swfw_egl_create_context(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
+			abort();
+		}
+		if (swfw_egl_create_surface(&swfw_win_wl->swfw_egl_ctx, (EGLNativeWindowType)swfw_win_wl->egl_window) != SWFW_OK) {
+			abort();
+		}
+		if (swfw_egl_make_current(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
+			abort();
+		}
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glFlush();
+		if (swfw_window_swap_buffers_wl(swfw_win_wl) != SWFW_OK) {
+			abort();
+		}
 	}
 #endif
 	return status;
