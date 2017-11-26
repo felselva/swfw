@@ -26,6 +26,7 @@ the following restrictions:
 #ifdef SWFW_X11
 	#include <X11/X.h>
 	#include <X11/Xlib.h>
+	#include <X11/Xutil.h>
 	#ifndef SWFW_NO_HARDWARE_ACCELERATION
 		#define SWFW_EGL
 	#endif
