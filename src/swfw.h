@@ -67,6 +67,17 @@ enum swfw_backend {
 	SWFW_BACKEND_WEB
 };
 
+enum swfw_window_border {
+	SWFW_WINDOW_BORDER_LEFT,
+	SWFW_WINDOW_BORDER_TOP,
+	SWFW_WINDOW_BORDER_RIGHT,
+	SWFW_WINDOW_BORDER_BOTTOM,
+	SWFW_WINDOW_BORDER_TOP_LEFT,
+	SWFW_WINDOW_BORDER_TOP_RIGHT,
+	SWFW_WINDOW_BORDER_BOTTOM_LEFT,
+	SWFW_WINDOW_BORDER_BOTTOM_RIGHT
+};
+
 struct swfw_gl_hints {
 	int32_t major;
 	int32_t minor;
@@ -176,12 +187,10 @@ struct swfw_context_wl {
 	struct wl_compositor *compositor;
 	struct wl_shell *shell;
 	struct wl_seat *seat;
-	/* X Keyboard */
-	struct xkb_context *kb_context;
-	struct xkb_keymap *kb_keymap;
-	struct xkb_state *kb_state;
-	struct xkb_compose_state *kb_compose_tate;
-	uint32_t kb_modifiers;
+	struct wl_pointer *pointer;
+	struct wl_keyboard *keyboard;
+	uint32_t pointer_serial;
+	struct swfw_event event;
 };
 
 struct swfw_window_wl {
@@ -223,6 +232,7 @@ struct swfw_window {
 enum swfw_status swfw_get_cursor_position(struct swfw_window *swfw_win, double *cursor_x, double *cursor_y);
 enum swfw_status swfw_get_window_position(struct swfw_window *swfw_win, int32_t *window_x, int32_t *window_y);
 enum swfw_status swfw_drag_window(struct swfw_window *swfw_win);
+enum swfw_status swfw_resize_window(struct swfw_window *swfw_win, enum swfw_window_border window_border);
 enum swfw_status swfw_hide_window(struct swfw_window *swfw_win);
 enum swfw_status swfw_show_window(struct swfw_window *swfw_win);
 enum swfw_status swfw_get_window_work_area(struct swfw_window *swfw_win, int32_t *x, int32_t *y, int32_t *width, int32_t *height);
@@ -240,7 +250,7 @@ enum swfw_status swfw_make_window(struct swfw_context *swfw_ctx, struct swfw_win
 enum swfw_status swfw_hint_window_size(struct swfw_context *swfw_ctx, int32_t width, int32_t height);
 enum swfw_status swfw_hint_gl_version(struct swfw_context *swfw_ctx, int32_t major, int32_t minor);
 enum swfw_status swfw_hint_use_hardware_acceleration(struct swfw_context *swfw_ctx, bool use_hardware_acceleration);
-enum swfw_status swfw_pool_events(struct swfw_context *swfw_ctx, struct swfw_event *event);
+int32_t swfw_poll_events(struct swfw_context *swfw_ctx, struct swfw_event *event);
 enum swfw_status swfw_destroy_context(struct swfw_context *swfw_ctx);
 enum swfw_status swfw_make_context(struct swfw_context *swfw_ctx, enum swfw_backend backend);
 

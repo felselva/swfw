@@ -159,6 +159,30 @@ static enum swfw_status swfw_egl_make_current(struct swfw_egl_context *swfw_egl_
 #ifndef _NET_WM_MOVERESIZE
 #define _NET_WM_MOVERESIZE 8
 #endif
+#ifndef _NET_WM_MOVERESIZE_SIZE_TOPLEFT
+#define _NET_WM_MOVERESIZE_SIZE_TOPLEFT 0
+#endif
+#ifndef _NET_WM_MOVERESIZE_SIZE_TOP
+#define _NET_WM_MOVERESIZE_SIZE_TOP 1
+#endif
+#ifndef _NET_WM_MOVERESIZE_SIZE_TOPRIGHT
+#define _NET_WM_MOVERESIZE_SIZE_TOPRIGHT 2
+#endif
+#ifndef _NET_WM_MOVERESIZE_SIZE_RIGHT
+#define _NET_WM_MOVERESIZE_SIZE_RIGHT 3
+#endif
+#ifndef _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT 4
+#endif
+#ifndef _NET_WM_MOVERESIZE_SIZE_BOTTOM
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOM 5
+#endif
+#ifndef _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT 6
+#endif
+#ifndef _NET_WM_MOVERESIZE_SIZE_LEFT
+#define _NET_WM_MOVERESIZE_SIZE_LEFT 7
+#endif
 
 struct x11_hints {
 	uint64_t flags;
@@ -209,6 +233,69 @@ enum swfw_status swfw_drag_window_x11(struct swfw_window_x11 *swfw_win_x11)
 		SubstructureRedirectMask | SubstructureNotifyMask,
 		(XEvent *)&xclient);
 	return SWFW_OK;
+}
+
+enum swfw_status swfw_resize_window_x11(struct swfw_window_x11 *swfw_win_x11, enum swfw_window_border window_border)
+{
+	enum swfw_status status = SWFW_OK;
+	Window child;
+	Window root;
+	int32_t window_x = 0;
+	int32_t window_y = 0;
+	int32_t root_x = 0;
+	int32_t root_y = 0;
+	int32_t cursor_x = 0.0;
+	int32_t cursor_y = 0.0;
+	unsigned int mask = 0;
+	XClientMessageEvent xclient = {0};
+	XUngrabPointer(swfw_win_x11->swfw_ctx_x11->display, 0);
+	XFlush(swfw_win_x11->swfw_ctx_x11->display);
+	XTranslateCoordinates(swfw_win_x11->swfw_ctx_x11->display,
+		swfw_win_x11->window,
+		swfw_win_x11->swfw_ctx_x11->root,
+		0, 0,
+		&window_x, &window_y,
+		&child);
+	XQueryPointer(swfw_win_x11->swfw_ctx_x11->display,
+		swfw_win_x11->window,
+		&root, &child,
+		&root_x, &root_y, &cursor_x, &cursor_y,
+		&mask);
+	xclient.type = ClientMessage;
+	xclient.window = swfw_win_x11->window;
+	xclient.message_type = swfw_win_x11->swfw_ctx_x11->atom_NET_WM_MOVERESIZE;
+	xclient.format = 32;
+	xclient.data.l[0] = window_x + cursor_x;
+	xclient.data.l[1] = window_y + cursor_y;
+	xclient.data.l[3] = 0;
+	xclient.data.l[4] = 0;
+	if (window_border == SWFW_WINDOW_BORDER_LEFT) {
+		xclient.data.l[2] = _NET_WM_MOVERESIZE_SIZE_LEFT;
+	} else if (window_border == SWFW_WINDOW_BORDER_TOP) {
+		xclient.data.l[2] = _NET_WM_MOVERESIZE_SIZE_TOP;
+	} else if (window_border == SWFW_WINDOW_BORDER_RIGHT) {
+		xclient.data.l[2] = _NET_WM_MOVERESIZE_SIZE_RIGHT;
+	} else if (window_border == SWFW_WINDOW_BORDER_BOTTOM) {
+		xclient.data.l[2] = _NET_WM_MOVERESIZE_SIZE_BOTTOM;
+	} else if (window_border == SWFW_WINDOW_BORDER_TOP_LEFT) {
+		xclient.data.l[2] = _NET_WM_MOVERESIZE_SIZE_TOPLEFT;
+	} else if (window_border == SWFW_WINDOW_BORDER_TOP_RIGHT) {
+		xclient.data.l[2] = _NET_WM_MOVERESIZE_SIZE_TOPRIGHT;
+	} else if (window_border == SWFW_WINDOW_BORDER_BOTTOM_LEFT) {
+		xclient.data.l[2] = _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT;
+	} else if (window_border == SWFW_WINDOW_BORDER_BOTTOM_RIGHT) {
+		xclient.data.l[2] = _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT;
+	} else {
+		status = SWFW_ERROR;
+	}
+	if (status == SWFW_OK) {
+		XSendEvent(swfw_win_x11->swfw_ctx_x11->display,
+			swfw_win_x11->swfw_ctx_x11->root,
+			False,
+			SubstructureRedirectMask | SubstructureNotifyMask,
+			(XEvent *)&xclient);
+	}
+	return status;
 }
 
 enum swfw_status swfw_hide_window_x11(struct swfw_window_x11 *swfw_win_x11)
@@ -413,44 +500,50 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 }
 
 /* Context */
-enum swfw_status swfw_pool_events_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
+int32_t swfw_poll_events_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
 {
+	enum swfw_status status = SWFW_OK;
+	struct swfw_event e = {0};
 	XEvent x11_event = {0};
-	XNextEvent(swfw_ctx_x11->display, &x11_event);
-	if (x11_event.type == Expose) {
-		event->type = SWFW_EVENT_EXPOSE;
-	} else if (x11_event.type == KeyPress) {
-		event->type = SWFW_EVENT_KEY_PRESS;
-		event->key_code = x11_event.xkey.keycode;
-	} else if (x11_event.type == KeyRelease) {
-		event->type = SWFW_EVENT_KEY_RELEASE;
-		event->key_code = x11_event.xkey.keycode;
-	} else if (x11_event.type == MotionNotify) {
-		event->type = SWFW_EVENT_CURSOR_MOTION;
-		event->x = x11_event.xmotion.x;
-		event->y = x11_event.xmotion.y;
-	} else if (x11_event.type == ButtonPress) {
-		event->type = SWFW_EVENT_BUTTON_PRESS;
-	} else if (x11_event.type == ButtonRelease) {
-		event->type = SWFW_EVENT_BUTTON_RELEASE;
-	} else if (x11_event.type == EnterNotify) {
-		event->type = SWFW_EVENT_CURSOR_ENTER;
-	} else if (x11_event.type == LeaveNotify) {
-		event->type = SWFW_EVENT_CURSOR_LEAVE;
-	} else if (x11_event.type == ConfigureNotify) {
-		event->type = SWFW_EVENT_CONFIGURE;
-	} else if (x11_event.type == MapNotify) {
-		event->type = SWFW_EVENT_MAP;
-	} else if (x11_event.type == UnmapNotify) {
-		event->type = SWFW_EVENT_UNMAP;
-	} else if (x11_event.type == DestroyNotify) {
-		event->type = SWFW_EVENT_DESTROY;
-	} else if (x11_event.type == ClientMessage) {
-		if(x11_event.xclient.data.l[0] == swfw_ctx_x11->atom_WM_DELETE_WINDOW) {
-			event->type = SWFW_EVENT_DESTROY;
+	int32_t count = XPending(swfw_ctx_x11->display);
+	if (count) {
+		XNextEvent(swfw_ctx_x11->display, &x11_event);
+		if (x11_event.type == Expose) {
+			e.type = SWFW_EVENT_EXPOSE;
+		} else if (x11_event.type == KeyPress) {
+			e.type = SWFW_EVENT_KEY_PRESS;
+			e.key_code = x11_event.xkey.keycode;
+		} else if (x11_event.type == KeyRelease) {
+			e.type = SWFW_EVENT_KEY_RELEASE;
+			e.key_code = x11_event.xkey.keycode;
+		} else if (x11_event.type == MotionNotify) {
+			e.type = SWFW_EVENT_CURSOR_MOTION;
+			e.x = x11_event.xmotion.x;
+			e.y = x11_event.xmotion.y;
+		} else if (x11_event.type == ButtonPress) {
+			e.type = SWFW_EVENT_BUTTON_PRESS;
+		} else if (x11_event.type == ButtonRelease) {
+			e.type = SWFW_EVENT_BUTTON_RELEASE;
+		} else if (x11_event.type == EnterNotify) {
+			e.type = SWFW_EVENT_CURSOR_ENTER;
+		} else if (x11_event.type == LeaveNotify) {
+			e.type = SWFW_EVENT_CURSOR_LEAVE;
+		} else if (x11_event.type == ConfigureNotify) {
+			e.type = SWFW_EVENT_CONFIGURE;
+		} else if (x11_event.type == MapNotify) {
+			e.type = SWFW_EVENT_MAP;
+		} else if (x11_event.type == UnmapNotify) {
+			e.type = SWFW_EVENT_UNMAP;
+		} else if (x11_event.type == DestroyNotify) {
+			e.type = SWFW_EVENT_DESTROY;
+		} else if (x11_event.type == ClientMessage) {
+			if(x11_event.xclient.data.l[0] == swfw_ctx_x11->atom_WM_DELETE_WINDOW) {
+				e.type = SWFW_EVENT_DESTROY;
+			}
 		}
 	}
-	return SWFW_OK;
+	*event = e;
+	return count;
 }
 
 enum swfw_status swfw_destroy_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
@@ -501,6 +594,38 @@ enum swfw_status swfw_make_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
 enum swfw_status swfw_drag_window_wl(struct swfw_window_wl *swfw_win_wl)
 {
 	return SWFW_UNSUPPORTED;
+}
+
+enum swfw_status swfw_resize_window_wl(struct swfw_window_wl *swfw_win_wl, enum swfw_window_border window_border)
+{
+	enum swfw_status status = SWFW_OK;
+	int32_t border = 0;
+	if (window_border == SWFW_WINDOW_BORDER_LEFT) {
+		border = WL_SHELL_SURFACE_RESIZE_LEFT;
+	} else if (window_border == SWFW_WINDOW_BORDER_TOP) {
+		border = WL_SHELL_SURFACE_RESIZE_TOP;
+	} else if (window_border == SWFW_WINDOW_BORDER_RIGHT) {
+		border = WL_SHELL_SURFACE_RESIZE_RIGHT;
+	} else if (window_border == SWFW_WINDOW_BORDER_BOTTOM) {
+		border = WL_SHELL_SURFACE_RESIZE_BOTTOM;
+	} else if (window_border == SWFW_WINDOW_BORDER_TOP_LEFT) {
+		border = WL_SHELL_SURFACE_RESIZE_TOP_LEFT;
+	} else if (window_border == SWFW_WINDOW_BORDER_TOP_RIGHT) {
+		border = WL_SHELL_SURFACE_RESIZE_TOP_RIGHT;
+	} else if (window_border == SWFW_WINDOW_BORDER_BOTTOM_LEFT) {
+		border = WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT;
+	} else if (window_border == SWFW_WINDOW_BORDER_BOTTOM_RIGHT) {
+		border = WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT;
+	} else {
+		status = SWFW_ERROR;
+	}
+	if (status == SWFW_OK) {
+		wl_shell_surface_resize(swfw_win_wl->shell_surface,
+			swfw_win_wl->swfw_ctx_wl->seat,
+			swfw_win_wl->swfw_ctx_wl->pointer_serial,
+			border);
+	}
+	return status;
 }
 
 enum swfw_status swfw_hide_window_wl(struct swfw_window_wl *swfw_win_wl)
@@ -657,10 +782,10 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 }
 
 /* Context */
-enum swfw_status swfw_pool_events_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
+int32_t swfw_poll_events_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
 {
 	wl_display_dispatch(swfw_ctx_wl->display);
-	return SWFW_OK;
+	return 0;
 }
 
 enum swfw_status swfw_destroy_context_wl(struct swfw_context_wl *swfw_ctx_wl)
@@ -670,22 +795,31 @@ enum swfw_status swfw_destroy_context_wl(struct swfw_context_wl *swfw_ctx_wl)
 
 static void pointer_listener_enter(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t surface_x, wl_fixed_t surface_y)
 {
+	struct swfw_context_wl *swfw_ctx_wl = data;
+	swfw_ctx_wl->pointer_serial = serial;
 }
 
 static void pointer_listener_leave(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
 {
+	struct swfw_context_wl *swfw_ctx_wl = data;
+	swfw_ctx_wl->pointer_serial = serial;
 }
 
 static void pointer_listener_motion(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
+	struct swfw_context_wl *swfw_ctx_wl = data;
 }
 
 static void pointer_listener_button(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
 {
+	struct swfw_context_wl *swfw_ctx_wl = data;
+	swfw_ctx_wl->pointer_serial = serial;
+	printf("button %d\n", button);
 }
 
 static void pointer_listener_axis(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
 {
+	struct swfw_context_wl *swfw_ctx_wl = data;
 }
 
 static void keyboard_listener_keymap(void *data, struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size)
@@ -728,11 +862,11 @@ static void seat_listener_capabilities(void *data, struct wl_seat *seat, enum wl
 {
 	struct swfw_context_wl *swfw_ctx_wl = data;
 	if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
-		struct wl_pointer *pointer = wl_seat_get_pointer(seat);
-		wl_pointer_add_listener(pointer, &pointer_listener, swfw_ctx_wl);
+		swfw_ctx_wl->pointer = wl_seat_get_pointer(seat);
+		wl_pointer_add_listener(swfw_ctx_wl->pointer, &pointer_listener, swfw_ctx_wl);
 	} else if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
-		struct wl_keyboard *keyboard = wl_seat_get_keyboard(seat);
-		wl_keyboard_add_listener(keyboard, &keyboard_listener, swfw_ctx_wl);
+		swfw_ctx_wl->keyboard = wl_seat_get_keyboard(seat);
+		wl_keyboard_add_listener(swfw_ctx_wl->keyboard, &keyboard_listener, swfw_ctx_wl);
 	}
 }
 
@@ -795,6 +929,21 @@ enum swfw_status swfw_drag_window(struct swfw_window *swfw_win)
 	} else if (swfw_win->swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
 #ifdef SWFW_WAYLAND
 		status = swfw_drag_window_wl(&swfw_win->swfw_win_wl);
+#endif
+	}
+	return status;
+}
+
+enum swfw_status swfw_resize_window(struct swfw_window *swfw_win, enum swfw_window_border window_border)
+{
+	enum swfw_status status = SWFW_INVALID_BACKEND;
+	if (swfw_win->swfw_ctx->backend == SWFW_BACKEND_X11) {
+#ifdef SWFW_X11
+		status = swfw_resize_window_x11(&swfw_win->swfw_win_x11, window_border);
+#endif
+	} else if (swfw_win->swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
+#ifdef SWFW_WAYLAND
+		status = swfw_resize_window_wl(&swfw_win->swfw_win_wl, window_border);
 #endif
 	}
 	return status;
@@ -1003,19 +1152,19 @@ enum swfw_status swfw_hint_use_hardware_acceleration(struct swfw_context *swfw_c
 	return SWFW_OK;
 }
 
-enum swfw_status swfw_pool_events(struct swfw_context *swfw_ctx, struct swfw_event *event)
+int32_t swfw_poll_events(struct swfw_context *swfw_ctx, struct swfw_event *event)
 {
-	enum swfw_status status = SWFW_INVALID_BACKEND;
+	int32_t count = 0;
 	if (swfw_ctx->backend == SWFW_BACKEND_X11) {
 #ifdef SWFW_X11
-		status = swfw_pool_events_x11(&swfw_ctx->swfw_ctx_x11, event);
+		count = swfw_poll_events_x11(&swfw_ctx->swfw_ctx_x11, event);
 #endif
 	} else if (swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
 #ifdef SWFW_WAYLAND
-		status = swfw_pool_events_wl(&swfw_ctx->swfw_ctx_wl, event);
+		count = swfw_poll_events_wl(&swfw_ctx->swfw_ctx_wl, event);
 #endif
 	}
-	return status;
+	return count;
 }
 
 enum swfw_status swfw_destroy_context(struct swfw_context *swfw_ctx)
