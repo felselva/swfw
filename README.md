@@ -19,7 +19,7 @@ This library still hasn't reached its first major release, which means that the 
 
 ## Compiling
 
-## Linux and FreeBSD
+### Linux and FreeBSD
 
 On Linux and FreeBSD, the compilation should specify the backend using the macros `SWFW_X11` and `SWFW_WAYLAND`. With GCC, this can be cone using the `-D` option:
 
