@@ -27,7 +27,7 @@ int32_t main(void)
 	swfw_set_window_resizable(&swfw_win, false);
 	swfw_show_window(&swfw_win);
 	while (running) {
-		while (swfw_poll_events(&swfw_ctx, &event)) {
+		while (swfw_poll_event(&swfw_ctx, &event)) {
 			if (event.type == SWFW_EVENT_KEY_PRESS) {
 				printf("Event: key %d pressed.\n", event.key_code);
 			} else if (event.type == SWFW_EVENT_KEY_RELEASE) {

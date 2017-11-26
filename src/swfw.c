@@ -500,7 +500,7 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 }
 
 /* Context */
-int32_t swfw_poll_events_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
+int32_t swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
 {
 	enum swfw_status status = SWFW_OK;
 	struct swfw_event e = {0};
@@ -782,7 +782,7 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 }
 
 /* Context */
-int32_t swfw_poll_events_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
+int32_t swfw_poll_event_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
 {
 	wl_display_dispatch(swfw_ctx_wl->display);
 	return 0;
@@ -1152,16 +1152,16 @@ enum swfw_status swfw_hint_use_hardware_acceleration(struct swfw_context *swfw_c
 	return SWFW_OK;
 }
 
-int32_t swfw_poll_events(struct swfw_context *swfw_ctx, struct swfw_event *event)
+int32_t swfw_poll_event(struct swfw_context *swfw_ctx, struct swfw_event *event)
 {
 	int32_t count = 0;
 	if (swfw_ctx->backend == SWFW_BACKEND_X11) {
 #ifdef SWFW_X11
-		count = swfw_poll_events_x11(&swfw_ctx->swfw_ctx_x11, event);
+		count = swfw_poll_event_x11(&swfw_ctx->swfw_ctx_x11, event);
 #endif
 	} else if (swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
 #ifdef SWFW_WAYLAND
-		count = swfw_poll_events_wl(&swfw_ctx->swfw_ctx_wl, event);
+		count = swfw_poll_event_wl(&swfw_ctx->swfw_ctx_wl, event);
 #endif
 	}
 	return count;
