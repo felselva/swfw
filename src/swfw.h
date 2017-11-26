@@ -26,8 +26,13 @@ the following restrictions:
 #ifdef SWFW_X11
 	#include <X11/X.h>
 	#include <X11/Xlib.h>
-	#include <GL/gl.h>
-	#include <GL/glx.h>
+	#ifndef SWFW_NO_HARDWARE_ACCELERATION
+		#define SWFW_EGL
+	#endif
+	#ifdef SWFW_EGL
+		#include <EGL/egl.h>
+		#include <GLES2/gl2.h>
+	#endif
 #endif
 #ifdef SWFW_WAYLAND
 	#include <wayland-server.h>
@@ -102,12 +107,6 @@ struct swfw_event {
 	double y;
 };
 
-#ifdef SWFW_GLX
-struct swfw_glx_context {
-	GLXContext context;
-};
-#endif
-
 #ifdef SWFW_EGL
 struct swfw_egl_context {
 	EGLint major;
@@ -164,6 +163,10 @@ struct swfw_window_x11 {
 	int32_t window_x;
 	int32_t window_y;
 	struct swfw_context_x11 *swfw_ctx_x11;
+	bool use_hardware_acceleration;
+#ifdef SWFW_EGL
+	struct swfw_egl_context swfw_egl_ctx;
+#endif
 };
 #endif
 

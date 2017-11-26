@@ -23,9 +23,6 @@ the following restrictions:
 #include <string.h>
 #include "swfw.h"
 
-#ifdef SWFW_GLX
-#endif
-
 #ifdef SWFW_EGL
 static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ctx)
 {

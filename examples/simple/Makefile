@@ -3,7 +3,7 @@ CFLAGS ?= -g
 CFLAGS_WARNINGS ?= -Wall
 
 CCINCL ?= -I ../../src
-CCLIBS_X11 ?= -lX11
+CCLIBS_X11 ?= -lX11 -lEGL -lGL
 CCLIBS_WAYLAND ?= -lwayland-client -lwayland-egl -lEGL -lGL
 CCLIBS_X11_WAYLAND ?= -lX11 -lwayland-client -lwayland-egl -lEGL -lGL
 
