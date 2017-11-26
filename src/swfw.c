@@ -502,7 +502,6 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 /* Context */
 int32_t swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
 {
-	enum swfw_status status = SWFW_OK;
 	struct swfw_event e = {0};
 	XEvent x11_event = {0};
 	int32_t count = XPending(swfw_ctx_x11->display);
