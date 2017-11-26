@@ -1,5 +1,7 @@
 # SWFW Reference
 
+## Types
+
 ```c
 enum swfw_status {
 	SWFW_OK,
@@ -39,6 +41,20 @@ On Linux or FreeBSD:
 - If you compiled only with X11 support, `SWFW_BACKEND_AUTOMATIC` and `SWFW_BACKEND_X11` will create a X11 context.
 - If you compiled only with Wayland support, `SWFW_BACKEND_AUTOMATIC` and `SWFW_BACKEND_WAYLAND` will create a Wayland context.
 - If you compiled with both X11 and Wayland support, `SWFW_BACKEND_AUTOMATIC` will create a X11 context. If you want to be specific, use `SWFW_BACKEND_X11` or `SWFW_BACKEND_WAYLAND`.
+
+```c
+struct swfw_context {
+	/* Internal structures */
+};
+
+struct swfw_window {
+	/* Internal structures */
+};
+```
+
+The types `struct swfw_context` and `struct swfw_window` are used in the context initialization and creation of the window.
+
+## Functions
 
 ```c
 enum swfw_status swfw_drag_window(struct swfw_window *swfw_win);
@@ -120,6 +136,11 @@ Sets if the window title.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
+```c
+enum swfw_status swfw_window_swap_inverval(struct swfw_window *swfw_win, int32_t interval);
+```
+
+Sets the swap interval of the window.
 
 ```c
 enum swfw_status swfw_window_swap_buffers(struct swfw_window *swfw_win);
