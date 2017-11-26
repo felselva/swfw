@@ -43,7 +43,7 @@ On Linux and FreeBSD, when including `swfw.h` in your file, two approaches can b
 
 ```
 gcc -DSWFW_X11 -DSWFW_WAYLAND -c swfw.c
-gcc -DSWFW_X11 -DSWFW_WAYLAND -c main.c # Macros also defined in your file.
+gcc -DSWFW_X11 -DSWFW_WAYLAND -c main.c # Macros defined using the -D option.
 ```
 
 The example `simple.c` contains a minimal application using the second approach.
