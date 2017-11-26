@@ -615,9 +615,45 @@ enum swfw_status swfw_make_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
 #endif /* SWFW_X11 */
 
 #ifdef SWFW_WAYLAND
+static void shell_surface_ping(void *data, struct wl_shell_surface *shell_surface, uint32_t serial)
+{
+	wl_shell_surface_pong(shell_surface, serial);
+}
+
+static void shell_surface_configure(void *data, struct wl_shell_surface *shell_surface, uint32_t edges, int32_t width, int32_t height)
+{
+	struct swfw_window_wl *swfw_win_wl = data;
+	struct wl_region *region = NULL;
+	region = wl_compositor_create_region(swfw_win_wl->swfw_ctx_wl->compositor);
+	wl_region_add(region, 0, 0, width, height);
+	wl_surface_set_opaque_region(swfw_win_wl->surface, region);
+	wl_surface_commit(swfw_win_wl->surface);
+	wl_region_destroy(region);
+#ifdef SWFW_EGL
+	if (swfw_win_wl->use_hardware_acceleration) {
+		wl_egl_window_resize(swfw_win_wl->egl_window, width, height, 0, 0);
+	}
+#endif
+}
+
+static const struct wl_shell_surface_listener shell_surface_listener = {
+	shell_surface_ping,
+	shell_surface_configure
+};
+
+static void swfw_wl_create_shell_surface(struct swfw_window_wl *swfw_win_wl)
+{
+	swfw_win_wl->shell_surface = wl_shell_get_shell_surface(swfw_win_wl->swfw_ctx_wl->shell, swfw_win_wl->surface);
+	wl_shell_surface_add_listener(swfw_win_wl->shell_surface, &shell_surface_listener, swfw_win_wl);
+	wl_shell_surface_set_toplevel(swfw_win_wl->shell_surface);
+	wl_surface_commit(swfw_win_wl->surface);
+}
+
 enum swfw_status swfw_drag_window_wl(struct swfw_window_wl *swfw_win_wl)
 {
-	wl_shell_surface_move(swfw_win_wl->shell_surface, swfw_win_wl->swfw_ctx_wl->seat, swfw_win_wl->swfw_ctx_wl->pointer_serial);
+	if (swfw_win_wl->shell_surface) {
+		wl_shell_surface_move(swfw_win_wl->shell_surface, swfw_win_wl->swfw_ctx_wl->seat, swfw_win_wl->swfw_ctx_wl->pointer_serial);
+	}
 	return SWFW_OK;
 }
 
@@ -644,7 +680,7 @@ enum swfw_status swfw_resize_window_wl(struct swfw_window_wl *swfw_win_wl, enum 
 	} else {
 		status = SWFW_ERROR;
 	}
-	if (status == SWFW_OK) {
+	if (status == SWFW_OK && swfw_win_wl->shell_surface) {
 		wl_shell_surface_resize(swfw_win_wl->shell_surface,
 			swfw_win_wl->swfw_ctx_wl->seat,
 			swfw_win_wl->swfw_ctx_wl->pointer_serial,
@@ -660,7 +696,10 @@ enum swfw_status swfw_hide_window_wl(struct swfw_window_wl *swfw_win_wl)
 
 enum swfw_status swfw_show_window_wl(struct swfw_window_wl *swfw_win_wl)
 {
-	return SWFW_UNSUPPORTED;
+	if (!swfw_win_wl->shell_surface) {
+		swfw_wl_create_shell_surface(swfw_win_wl);
+	}
+	return SWFW_OK;
 }
 
 enum swfw_status swfw_get_window_work_area_wl(struct swfw_window_wl *swfw_win_wl, int32_t *x, int32_t *y, int32_t *width, int32_t *height)
@@ -695,7 +734,9 @@ enum swfw_status swfw_set_window_decorated_wl(struct swfw_window_wl *swfw_win_wl
 
 enum swfw_status swfw_set_window_title_wl(struct swfw_window_wl *swfw_win_wl, char *title)
 {
-	wl_shell_surface_set_title(swfw_win_wl->shell_surface, title);
+	if (swfw_win_wl->shell_surface) {
+		wl_shell_surface_set_title(swfw_win_wl->shell_surface, title);
+	}
 	return SWFW_OK;
 }
 
@@ -722,65 +763,22 @@ enum swfw_status swfw_destroy_window_wl(struct swfw_window_wl *swfw_win_wl)
 	return SWFW_OK;
 }
 
-static void shell_surface_ping(void *data, struct wl_shell_surface *shell_surface, uint32_t serial)
-{
-	wl_shell_surface_pong(shell_surface, serial);
-}
-
-static void shell_surface_configure(void *data, struct wl_shell_surface *shell_surface, uint32_t edges, int32_t width, int32_t height)
-{
-	struct swfw_window_wl *swfw_win_wl = data;
-#ifdef SWFW_EGL
-	if (swfw_win_wl->use_hardware_acceleration) {
-		wl_egl_window_resize(swfw_win_wl->egl_window, width, height, 0, 0);
-	}
-#endif
-}
-
-static void shell_surface_popup_done(void *data, struct wl_shell_surface *shell_surface)
-{
-}
-
-static void surface_enter(void *data, struct wl_surface *surface, struct wl_output *output)
-{
-	struct swfw_window_wl *swfw_win_wl = data;
-	/* Surface enter */
-}
-
-static void surface_leave(void *data, struct wl_surface *surface, struct wl_output *output)
-{
-	struct swfw_window_wl *swfw_win_wl = data;
-	/* Surface leave */
-}
-
-static const struct wl_shell_surface_listener shell_surface_listener = {
-	shell_surface_ping,
-	shell_surface_configure,
-	shell_surface_popup_done
-};
-
-static const struct wl_surface_listener surface_listener = {
-	surface_enter,
-	surface_leave
-};
+static const struct wl_surface_listener surface_listener = {0};
 
 enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_window_wl *swfw_win_wl, struct swfw_hints hints)
 {
 	enum swfw_status status = SWFW_OK;
+	struct wl_region *region = NULL;
 	/* Wayland surface */
 	swfw_win_wl->swfw_ctx_wl = swfw_ctx_wl;
 	swfw_win_wl->surface = wl_compositor_create_surface(swfw_ctx_wl->compositor);
 	wl_surface_add_listener(swfw_win_wl->surface, &surface_listener, swfw_win_wl);
-	/* Wayland shell surface */
-	swfw_win_wl->shell_surface = wl_shell_get_shell_surface(swfw_ctx_wl->shell, swfw_win_wl->surface);
-	wl_shell_surface_add_listener(swfw_win_wl->shell_surface, &shell_surface_listener, swfw_win_wl);
-	wl_shell_surface_set_toplevel(swfw_win_wl->shell_surface);
 	/* Opaque region */
-	swfw_win_wl->region = wl_compositor_create_region(swfw_ctx_wl->compositor);
-	wl_region_add(swfw_win_wl->region, 0, 0, hints.width, hints.height);
-	wl_surface_set_opaque_region(swfw_win_wl->surface, swfw_win_wl->region);
+	region = wl_compositor_create_region(swfw_win_wl->swfw_ctx_wl->compositor);
+	wl_region_add(region, 0, 0, hints.width, hints.height);
+	wl_surface_set_opaque_region(swfw_win_wl->surface, region);
 	wl_surface_commit(swfw_win_wl->surface);
-	wl_region_destroy(swfw_win_wl->region);
+	wl_region_destroy(region);
 	swfw_win_wl->use_hardware_acceleration = hints.use_hardware_acceleration;
 #ifdef SWFW_EGL
 	if (swfw_win_wl->use_hardware_acceleration) {
@@ -890,6 +888,15 @@ static void keyboard_listener_leave(void *data, struct wl_keyboard *keyboard, ui
 
 static void keyboard_listener_key(void *data, struct wl_keyboard *keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
 {
+	struct swfw_context_wl *swfw_ctx_wl = data;
+	struct swfw_event e = {0};
+	if (state == 0) {
+		e.type = SWFW_EVENT_KEY_RELEASE;
+	} else {
+		e.type = SWFW_EVENT_KEY_PRESS;
+	}
+	e.key_code = key;
+	swfw_ctx_wl->event = e;
 }
 
 static void keyboard_listener_modifiers(void *data, struct wl_keyboard *keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group)
@@ -918,7 +925,8 @@ static void seat_listener_capabilities(void *data, struct wl_seat *seat, enum wl
 	if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
 		swfw_ctx_wl->pointer = wl_seat_get_pointer(seat);
 		wl_pointer_add_listener(swfw_ctx_wl->pointer, &pointer_listener, swfw_ctx_wl);
-	} else if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
+	}
+	if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
 		swfw_ctx_wl->keyboard = wl_seat_get_keyboard(seat);
 		wl_keyboard_add_listener(swfw_ctx_wl->keyboard, &keyboard_listener, swfw_ctx_wl);
 	}
