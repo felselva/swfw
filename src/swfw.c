@@ -784,6 +784,9 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 int32_t swfw_poll_event_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
 {
 	int32_t count = wl_display_dispatch_pending(swfw_ctx_wl->display);
+	if (count) {
+		*event = swfw_ctx_wl->event;
+	}
 	return count;
 }
 
@@ -812,7 +815,14 @@ static void pointer_listener_motion(void *data, struct wl_pointer *pointer, uint
 static void pointer_listener_button(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
 {
 	struct swfw_context_wl *swfw_ctx_wl = data;
+	struct swfw_event e = {0};
 	swfw_ctx_wl->pointer_serial = serial;
+	if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
+		e.type = SWFW_EVENT_BUTTON_PRESS;
+	} else {
+		e.type = SWFW_EVENT_BUTTON_RELEASE;
+	}
+	swfw_ctx_wl->event = e;
 }
 
 static void pointer_listener_axis(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
