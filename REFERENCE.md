@@ -44,7 +44,7 @@ On Linux or FreeBSD:
 enum swfw_status swfw_drag_window(struct swfw_window *swfw_win);
 ```
 
-Start a dragging operation on the window.
+Starts a dragging operation on the window.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -52,7 +52,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_hide_window(struct swfw_window *swfw_win);
 ```
 
-Hide the window.
+Hides the window.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -60,7 +60,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_show_window(struct swfw_window *swfw_win);
 ```
 
-Show the window.
+Shows the window.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -68,7 +68,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_get_window_work_area(struct swfw_window *swfw_win, int32_t *x, int32_t *y, int32_t *width, int32_t *height);
 ```
 
-Get the display work area. The value of `x` and `y` will represent the top-left corner, and the value `width` and `height` the size of the work area.
+Gets the display work area. The value of `x` and `y` will represent the top-left corner, and the value `width` and `height` the size of the work area.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -76,7 +76,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_set_window_position(struct swfw_window *swfw_win, int32_t x, int32_t y);
 ```
 
-Set the window position to `x` and `y`.
+Sets the window position to `x` and `y`.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -84,7 +84,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_set_window_size(struct swfw_window *swfw_win, int32_t width, int32_t height);
 ```
 
-Set the window size to `width` and `height`.
+Sets the window size to `width` and `height`.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -92,7 +92,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_set_window_size_limits(struct swfw_window *swfw_win, int32_t min_width, int32_t min_height, int32_t max_width, int32_t max_height);
 ```
 
-Set the minimum size of the window to `min_width` and `min_height`, and the maximum size to `max_width` and `max_height`. If one of the values are negative, then the limit is unset.
+Sets the minimum size of the window to `min_width` and `min_height`, and the maximum size to `max_width` and `max_height`. If one of the values are negative, then the limit is unset.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -100,7 +100,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_set_window_resizable(struct swfw_window *swfw_win, bool resizable);
 ```
 
-Set if the window can be resized.
+Sets if the window can be resized.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -108,7 +108,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_set_window_decorated(struct swfw_window *swfw_win, bool decorated);
 ```
 
-Set if the window is decorated.
+Sets if the window is decorated.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -116,15 +116,22 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_set_window_title(struct swfw_window *swfw_win, char *title);
 ```
 
-Set if the window title.
+Sets if the window title.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
+
+
+```c
+enum swfw_status swfw_window_swap_buffers(struct swfw_window *swfw_win);
+```
+
+Swaps the front and back buffers of the window.
 
 ```c
 enum swfw_status swfw_destroy_window(struct swfw_window *swfw_win);
 ```
 
-Destroy the window.
+Destroys the window.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -140,7 +147,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_hint_window_size(struct swfw_context *swfw_ctx, int32_t width, int32_t height);
 ```
 
-Set the initial size used for the creation of the window.
+Sets the initial size used for the creation of the window.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -164,7 +171,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_pool_events(struct swfw_context *swfw_ctx, struct swfw_event *event);
 ```
 
-Pool events and return to the structure `event`.
+Pool events and returns to the structure `event`.
 
 If successful, the function returns `SWFW_OK`, otherwise one of the error values.
 
@@ -172,7 +179,7 @@ If successful, the function returns `SWFW_OK`, otherwise one of the error values
 enum swfw_status swfw_destroy_context(struct swfw_context *swfw_ctx);
 ```
 
-Destroy the context.
+Destroys the context.
 
 ```c
 enum swfw_status swfw_make_context(struct swfw_context *swfw_ctx, enum swfw_backend backend);
