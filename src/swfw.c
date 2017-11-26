@@ -592,7 +592,8 @@ enum swfw_status swfw_make_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
 #ifdef SWFW_WAYLAND
 enum swfw_status swfw_drag_window_wl(struct swfw_window_wl *swfw_win_wl)
 {
-	return SWFW_UNSUPPORTED;
+	wl_shell_surface_move(swfw_win_wl->shell_surface, swfw_win_wl->swfw_ctx_wl->seat, swfw_win_wl->swfw_ctx_wl->pointer_serial);
+	return SWFW_OK;
 }
 
 enum swfw_status swfw_resize_window_wl(struct swfw_window_wl *swfw_win_wl, enum swfw_window_border window_border)
