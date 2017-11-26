@@ -82,7 +82,17 @@ static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ct
 	return SWFW_OK;
 }
 
-enum swfw_status initialize_egl(struct swfw_egl_context *swfw_egl_ctx, void *native_display)
+static enum swfw_status swfw_egl_swap_buffers(struct swfw_egl_context *swfw_egl_ctx)
+{
+	enum swfw_status status = SWFW_OK;
+	eglSwapBuffers(swfw_egl_ctx->display, swfw_egl_ctx->surface);
+	if (eglGetError() != EGL_SUCCESS) {
+		status = SWFW_ERROR;
+	}
+	return status;
+}
+
+static enum swfw_status initialize_egl(struct swfw_egl_context *swfw_egl_ctx, void *native_display)
 {
 	enum swfw_status status = SWFW_OK;
 	swfw_egl_ctx->display = eglGetDisplay(native_display);
@@ -96,7 +106,7 @@ enum swfw_status initialize_egl(struct swfw_egl_context *swfw_egl_ctx, void *nat
 	return status;
 }
 
-enum swfw_status swfw_egl_create_context(struct swfw_egl_context *swfw_egl_ctx)
+static enum swfw_status swfw_egl_create_context(struct swfw_egl_context *swfw_egl_ctx)
 {
 	enum swfw_status status = SWFW_OK;
 	EGLint context_attribs[] = {
@@ -118,7 +128,7 @@ done:
 	return status;
 }
 
-enum swfw_status swfw_egl_create_surface(struct swfw_egl_context *swfw_egl_ctx, EGLNativeWindowType native_window)
+static enum swfw_status swfw_egl_create_surface(struct swfw_egl_context *swfw_egl_ctx, EGLNativeWindowType native_window)
 {
 	enum swfw_status status = SWFW_OK;
 	EGLint egl_surf_attr[] = {
@@ -135,7 +145,7 @@ enum swfw_status swfw_egl_create_surface(struct swfw_egl_context *swfw_egl_ctx, 
 	return status;
 }
 
-enum swfw_status swfw_egl_make_current(struct swfw_egl_context *swfw_egl_ctx)
+static enum swfw_status swfw_egl_make_current(struct swfw_egl_context *swfw_egl_ctx)
 {
 	enum swfw_status status = SWFW_OK;
 	if (eglMakeCurrent(swfw_egl_ctx->display, swfw_egl_ctx->surface, swfw_egl_ctx->surface, swfw_egl_ctx->context) == EGL_FALSE) {
@@ -514,12 +524,7 @@ enum swfw_status swfw_window_swap_buffers_wl(struct swfw_window_wl *swfw_win_wl)
 {
 	enum swfw_status status = SWFW_OK;
 #ifdef SWFW_EGL
-	if (swfw_win_wl->use_hardware_acceleration) {
-		eglSwapBuffers(swfw_win_wl->swfw_egl_ctx.display, swfw_win_wl->swfw_egl_ctx.surface);
-		if (eglGetError() != EGL_SUCCESS) {
-			status = SWFW_ERROR;
-		}
-	}
+	status = swfw_egl_swap_buffers(&swfw_win_wl->swfw_egl_ctx);
 #endif
 	return status;
 }
