@@ -811,6 +811,11 @@ static void pointer_listener_leave(void *data, struct wl_pointer *pointer, uint3
 static void pointer_listener_motion(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
 	struct swfw_context_wl *swfw_ctx_wl = data;
+	struct swfw_event e = {0};
+	e.type = SWFW_EVENT_CURSOR_MOTION;
+	e.x = wl_fixed_to_double(x);
+	e.y = wl_fixed_to_double(y);
+	swfw_ctx_wl->event = e;
 }
 
 static void pointer_listener_button(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
