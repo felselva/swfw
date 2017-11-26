@@ -26,60 +26,66 @@ the following restrictions:
 #ifdef SWFW_EGL
 static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ctx)
 {
+	enum swfw_status status = SWFW_OK;
 	EGLConfig egl_conf = {0};
-	EGLint config_attribs[] = {
-		EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-		EGL_RED_SIZE, 8,
-		EGL_GREEN_SIZE, 8,
-		EGL_BLUE_SIZE, 8,
-		EGL_ALPHA_SIZE, 8,
-		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-		EGL_NONE
-	};
 	EGLConfig *configs = NULL;
 	EGLint egl_num_configs = 0;
-	EGLint val = 0;
-	EGLBoolean rc = false;
+	EGLint val_EGL_SURFACE_TYPE = 0;
+	EGLint val_EGL_RENDERABLE_TYPE = 0;
+	EGLint val_EGL_COLOR_BUFFER_TYPE = 0;
+	EGLint val_EGL_RED_SIZE = 0;
+	EGLint val_EGL_GREEN_SIZE = 0;
+	EGLint val_EGL_BLUE_SIZE = 0;
+	EGLint val_EGL_ALPHA_SIZE = 0;
+	EGLint val_EGL_DEPTH_SIZE = 0;
+	EGLBoolean result = false;
 	EGLint i = 0;
-	rc = eglGetConfigs(swfw_egl_ctx->display, NULL, 0, &egl_num_configs);
-	if (rc != EGL_TRUE) {
-		return false;
+	result = eglGetConfigs(swfw_egl_ctx->display, NULL, 0, &egl_num_configs);
+	if (result != EGL_TRUE) {
+		status = SWFW_ERROR;
+		goto done;
 	}
 	if (egl_num_configs == 0) {
-		return false;
+		status = SWFW_ERROR;
+		goto done;
 	}
 	configs = malloc(egl_num_configs * sizeof(*configs));
 	if (configs == NULL) {
-		return false;
+		status = SWFW_ERROR;
+		goto done;
 	}
-	rc = eglGetConfigs(swfw_egl_ctx->display, configs, egl_num_configs, &egl_num_configs);
-	if (rc != EGL_TRUE) {
+	result = eglGetConfigs(swfw_egl_ctx->display, configs, egl_num_configs, &egl_num_configs);
+	if (result != EGL_TRUE) {
 		free(configs);
-		return false;
+		status = SWFW_ERROR;
+		goto done;
 	}
-	for (i = 0; i < egl_num_configs; i++) {
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_SURFACE_TYPE, &val);
-		if (!(val & EGL_WINDOW_BIT)) {
-			continue;
+	while (i < egl_num_configs) {
+		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_SURFACE_TYPE, &val_EGL_SURFACE_TYPE);
+		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_COLOR_BUFFER_TYPE, &val_EGL_COLOR_BUFFER_TYPE);
+		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_RENDERABLE_TYPE, &val_EGL_RENDERABLE_TYPE);
+		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_RED_SIZE, &val_EGL_RED_SIZE);
+		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_GREEN_SIZE, &val_EGL_GREEN_SIZE);
+		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_BLUE_SIZE, &val_EGL_BLUE_SIZE);
+		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_ALPHA_SIZE, &val_EGL_ALPHA_SIZE);
+		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_DEPTH_SIZE, &val_EGL_DEPTH_SIZE);
+		if (val_EGL_SURFACE_TYPE & EGL_WINDOW_BIT &&
+		val_EGL_COLOR_BUFFER_TYPE & EGL_RGB_BUFFER &&
+		val_EGL_RENDERABLE_TYPE & EGL_OPENGL_ES2_BIT &&
+		val_EGL_RED_SIZE == 8 &&
+		val_EGL_GREEN_SIZE == 8 &&
+		val_EGL_BLUE_SIZE == 8 &&
+		val_EGL_ALPHA_SIZE == 8 &&
+		val_EGL_DEPTH_SIZE != 0) {
+			egl_conf = configs[i];
+			i = egl_num_configs;
 		}
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_COLOR_BUFFER_TYPE, &val);
-		if (!(val & EGL_RGB_BUFFER)) {
-			continue;
-		}
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_RENDERABLE_TYPE, &val);
-		if (!(val & EGL_OPENGL_ES2_BIT)) {
-			continue;
-		}
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_DEPTH_SIZE, &val);
-		if (val == 0) {
-			continue;
-		}
-		egl_conf = configs[i];
-		break;
+		i++;
 	}
 	free(configs);
 	swfw_egl_ctx->config = egl_conf;
-	return SWFW_OK;
+done:
+	return status;
 }
 
 static enum swfw_status swfw_egl_swap_interval(struct swfw_egl_context *swfw_egl_ctx, int32_t interval)
