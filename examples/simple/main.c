@@ -39,6 +39,10 @@ int32_t main(void)
 				printf("Event: button released.\n");
 			} else if (event.type == SWFW_EVENT_CURSOR_MOTION) {
 				printf("Event: cursor motion (%.0f, %.0f).\n", event.x, event.y);
+			} else if (event.type == SWFW_EVENT_CURSOR_ENTER) {
+				printf("Event: cursor enter.\n");
+			} else if (event.type == SWFW_EVENT_CURSOR_LEAVE) {
+				printf("Event: cursor leave.\n");
 			} else if (event.type == SWFW_EVENT_DESTROY) {
 				printf("Event: destroy window.\n");
 				running = false;

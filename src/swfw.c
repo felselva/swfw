@@ -799,13 +799,19 @@ enum swfw_status swfw_destroy_context_wl(struct swfw_context_wl *swfw_ctx_wl)
 static void pointer_listener_enter(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t surface_x, wl_fixed_t surface_y)
 {
 	struct swfw_context_wl *swfw_ctx_wl = data;
+	struct swfw_event e = {0};
 	swfw_ctx_wl->pointer_serial = serial;
+	e.type = SWFW_EVENT_CURSOR_ENTER;
+	swfw_ctx_wl->event = e;
 }
 
 static void pointer_listener_leave(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
 {
 	struct swfw_context_wl *swfw_ctx_wl = data;
+	struct swfw_event e = {0};
 	swfw_ctx_wl->pointer_serial = serial;
+	e.type = SWFW_EVENT_CURSOR_LEAVE;
+	swfw_ctx_wl->event = e;
 }
 
 static void pointer_listener_motion(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
