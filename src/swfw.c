@@ -346,6 +346,9 @@ enum swfw_status swfw_set_window_title_x11(struct swfw_window_x11 *swfw_win_x11,
 enum swfw_status swfw_window_swap_buffers_x11(struct swfw_window_x11 *swfw_win_x11)
 {
 	enum swfw_status status = SWFW_OK;
+#ifdef SWFW_EGL
+	status = swfw_egl_swap_buffers(&swfw_win_x11->swfw_egl_ctx);
+#endif
 	return status;
 }
 
@@ -380,6 +383,32 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 	} else {
 		status = SWFW_ERROR;
 	}
+	swfw_win_x11->use_hardware_acceleration = hints.use_hardware_acceleration;
+#ifdef SWFW_EGL
+	if (swfw_win_x11->use_hardware_acceleration) {
+		if (initialize_egl(&swfw_win_x11->swfw_egl_ctx, swfw_ctx_x11->display) != SWFW_OK) {
+			abort();
+		}
+		if (swfw_egl_get_config(&swfw_win_x11->swfw_egl_ctx) != SWFW_OK) {
+			abort();
+		}
+		if (swfw_egl_create_context(&swfw_win_x11->swfw_egl_ctx) != SWFW_OK) {
+			abort();
+		}
+		if (swfw_egl_create_surface(&swfw_win_x11->swfw_egl_ctx, (EGLNativeWindowType)swfw_win_x11->window) != SWFW_OK) {
+			abort();
+		}
+		if (swfw_egl_make_current(&swfw_win_x11->swfw_egl_ctx) != SWFW_OK) {
+			abort();
+		}
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glFlush();
+		if (swfw_window_swap_buffers_x11(swfw_win_x11) != SWFW_OK) {
+			abort();
+		}
+	}
+#endif
 	return status;
 }
 
