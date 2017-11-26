@@ -230,8 +230,6 @@ struct swfw_window {
 };
 
 /* Window */
-enum swfw_status swfw_get_cursor_position(struct swfw_window *swfw_win, double *cursor_x, double *cursor_y);
-enum swfw_status swfw_get_window_position(struct swfw_window *swfw_win, int32_t *window_x, int32_t *window_y);
 enum swfw_status swfw_drag_window(struct swfw_window *swfw_win);
 enum swfw_status swfw_resize_window(struct swfw_window *swfw_win, enum swfw_window_border window_border);
 enum swfw_status swfw_hide_window(struct swfw_window *swfw_win);
