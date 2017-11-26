@@ -813,7 +813,6 @@ static void pointer_listener_button(void *data, struct wl_pointer *pointer, uint
 {
 	struct swfw_context_wl *swfw_ctx_wl = data;
 	swfw_ctx_wl->pointer_serial = serial;
-	printf("button %d\n", button);
 }
 
 static void pointer_listener_axis(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
