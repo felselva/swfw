@@ -23,6 +23,7 @@ int32_t main(void)
 		printf("Error: failed to create window.\n");
 		abort();
 	}
+	swfw_window_swap_interval(&swfw_win, 1);
 	swfw_set_window_title(&swfw_win, "Simple");
 	swfw_set_window_resizable(&swfw_win, false);
 	swfw_show_window(&swfw_win);

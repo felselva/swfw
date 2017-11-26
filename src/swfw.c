@@ -82,6 +82,16 @@ static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ct
 	return SWFW_OK;
 }
 
+static enum swfw_status swfw_egl_swap_interval(struct swfw_egl_context *swfw_egl_ctx, int32_t interval)
+{
+	enum swfw_status status = SWFW_OK;
+	eglSwapInterval(swfw_egl_ctx->display, interval);
+	if (eglGetError() != EGL_SUCCESS) {
+		status = SWFW_ERROR;
+	}
+	return status;
+}
+
 static enum swfw_status swfw_egl_swap_buffers(struct swfw_egl_context *swfw_egl_ctx)
 {
 	enum swfw_status status = SWFW_OK;
@@ -430,6 +440,15 @@ enum swfw_status swfw_set_window_title_x11(struct swfw_window_x11 *swfw_win_x11,
 	return SWFW_OK;
 }
 
+enum swfw_status swfw_window_swap_interval_x11(struct swfw_window_x11 *swfw_win_x11, int32_t interval)
+{
+	enum swfw_status status = SWFW_OK;
+#ifdef SWFW_EGL
+	status = swfw_egl_swap_interval(&swfw_win_x11->swfw_egl_ctx, interval);
+#endif
+	return status;
+}
+
 enum swfw_status swfw_window_swap_buffers_x11(struct swfw_window_x11 *swfw_win_x11)
 {
 	enum swfw_status status = SWFW_OK;
@@ -672,6 +691,15 @@ enum swfw_status swfw_set_window_title_wl(struct swfw_window_wl *swfw_win_wl, ch
 {
 	wl_shell_surface_set_title(swfw_win_wl->shell_surface, title);
 	return SWFW_OK;
+}
+
+enum swfw_status swfw_window_swap_interval_wl(struct swfw_window_wl *swfw_win_wl, int32_t interval)
+{
+	enum swfw_status status = SWFW_OK;
+#ifdef SWFW_EGL
+	status = swfw_egl_swap_interval(&swfw_win_wl->swfw_egl_ctx, interval);
+#endif
+	return status;
 }
 
 enum swfw_status swfw_window_swap_buffers_wl(struct swfw_window_wl *swfw_win_wl)
@@ -1099,6 +1127,21 @@ enum swfw_status swfw_set_window_title(struct swfw_window *swfw_win, char *title
 	} else if (swfw_win->swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
 #ifdef SWFW_WAYLAND
 		status = swfw_set_window_title_wl(&swfw_win->swfw_win_wl, title);
+#endif
+	}
+	return status;
+}
+
+enum swfw_status swfw_window_swap_interval(struct swfw_window *swfw_win, int32_t interval)
+{
+	enum swfw_status status = SWFW_INVALID_BACKEND;
+	if (swfw_win->swfw_ctx->backend == SWFW_BACKEND_X11) {
+#ifdef SWFW_X11
+		status = swfw_window_swap_interval_x11(&swfw_win->swfw_win_x11, interval);
+#endif
+	} else if (swfw_win->swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
+#ifdef SWFW_WAYLAND
+		status = swfw_window_swap_interval_wl(&swfw_win->swfw_win_wl, interval);
 #endif
 	}
 	return status;

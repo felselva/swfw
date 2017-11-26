@@ -242,6 +242,7 @@ enum swfw_status swfw_set_window_size_limits(struct swfw_window *swfw_win, int32
 enum swfw_status swfw_set_window_resizable(struct swfw_window *swfw_win, bool resizable);
 enum swfw_status swfw_set_window_decorated(struct swfw_window *swfw_win, bool decorated);
 enum swfw_status swfw_set_window_title(struct swfw_window *swfw_win, char *title);
+enum swfw_status swfw_window_swap_interval(struct swfw_window *swfw_win, int32_t interval);
 enum swfw_status swfw_window_swap_buffers(struct swfw_window *swfw_win);
 enum swfw_status swfw_destroy_window(struct swfw_window *swfw_win);
 enum swfw_status swfw_make_window(struct swfw_context *swfw_ctx, struct swfw_window *swfw_win);
