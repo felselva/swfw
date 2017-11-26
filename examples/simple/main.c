@@ -43,6 +43,10 @@ int32_t main(void)
 			printf("Event: destroy window.\n");
 			running = false;
 		}
+		glClearColor(0.5, 0.5, 0.5, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glFlush();
+		swfw_window_swap_buffers(&swfw_win);
 	}
 	swfw_destroy_window(&swfw_win);
 	swfw_destroy_context(&swfw_ctx);
