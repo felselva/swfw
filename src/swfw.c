@@ -783,8 +783,8 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 /* Context */
 int32_t swfw_poll_event_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
 {
-	wl_display_dispatch(swfw_ctx_wl->display);
-	return 0;
+	int32_t count = wl_display_dispatch_pending(swfw_ctx_wl->display);
+	return count;
 }
 
 enum swfw_status swfw_destroy_context_wl(struct swfw_context_wl *swfw_ctx_wl)
