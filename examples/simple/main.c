@@ -40,6 +40,8 @@ int32_t main(void)
 				printf("Event: button released.\n");
 			} else if (event.type == SWFW_EVENT_CURSOR_MOTION) {
 				printf("Event: cursor motion (%.0f, %.0f).\n", event.x, event.y);
+			} else if (event.type == SWFW_EVENT_SCROLL) {
+				printf("Event: scroll %u, %.2f.\n", event.axis, event.scroll);
 			} else if (event.type == SWFW_EVENT_CURSOR_ENTER) {
 				printf("Event: cursor enter.\n");
 			} else if (event.type == SWFW_EVENT_CURSOR_LEAVE) {

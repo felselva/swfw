@@ -872,6 +872,11 @@ static void pointer_listener_button(void *data, struct wl_pointer *pointer, uint
 static void pointer_listener_axis(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
 {
 	struct swfw_context_wl *swfw_ctx_wl = data;
+	struct swfw_event e = {0};
+	e.type = SWFW_EVENT_SCROLL;
+	e.axis = axis;
+	e.scroll = wl_fixed_to_double(value);
+	swfw_ctx_wl->event = e;
 }
 
 static void keyboard_listener_keymap(void *data, struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size)

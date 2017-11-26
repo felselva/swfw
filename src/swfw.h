@@ -108,6 +108,7 @@ enum swfw_event_type {
 	SWFW_EVENT_CURSOR_MOTION,
 	SWFW_EVENT_BUTTON_PRESS,
 	SWFW_EVENT_BUTTON_RELEASE,
+	SWFW_EVENT_SCROLL,
 	SWFW_EVENT_EXPOSE,
 	SWFW_EVENT_DESTROY
 };
@@ -117,6 +118,8 @@ struct swfw_event {
 	uint32_t key_code;
 	double x;
 	double y;
+	uint32_t axis;
+	double scroll;
 };
 
 #ifdef SWFW_EGL
