@@ -199,6 +199,12 @@ static enum swfw_status swfw_egl_make_current(struct swfw_egl_context *swfw_egl_
 #ifndef _NET_WM_MOVERESIZE_SIZE_LEFT
 #define _NET_WM_MOVERESIZE_SIZE_LEFT 7
 #endif
+#ifndef Button6
+#define Button6 6
+#endif
+#ifndef Button7
+#define Button7 7
+#endif
 
 struct x11_hints {
 	uint64_t flags;
@@ -544,10 +550,33 @@ int32_t swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_e
 			e.type = SWFW_EVENT_CURSOR_MOTION;
 			e.x = x11_event.xmotion.x;
 			e.y = x11_event.xmotion.y;
-		} else if (x11_event.type == ButtonPress) {
-			e.type = SWFW_EVENT_BUTTON_PRESS;
-		} else if (x11_event.type == ButtonRelease) {
-			e.type = SWFW_EVENT_BUTTON_RELEASE;
+		} else if (x11_event.type == ButtonPress || x11_event.type == ButtonRelease) {
+			if (x11_event.xbutton.button == Button1 || x11_event.xbutton.button == Button2 || x11_event.xbutton.button == Button3) {
+				if (x11_event.type == ButtonPress) {
+					e.type = SWFW_EVENT_BUTTON_PRESS;
+				} else if (x11_event.type == ButtonRelease) {
+					e.type = SWFW_EVENT_BUTTON_RELEASE;
+				}
+				e.button = x11_event.xbutton.button;
+			} else {
+				e.type = SWFW_EVENT_SCROLL;
+				if (x11_event.xbutton.button == Button4) {
+					e.axis = 0;
+					e.scroll = -1;
+				}
+				if (x11_event.xbutton.button == Button5) {
+					e.axis = 0;
+					e.scroll = 1;
+				}
+				if (x11_event.xbutton.button == Button6) {
+					e.axis = 1;
+					e.scroll = -1;
+				}
+				if (x11_event.xbutton.button == Button7) {
+					e.axis = 1;
+					e.scroll = 1;
+				}
+			}
 		} else if (x11_event.type == EnterNotify) {
 			e.type = SWFW_EVENT_CURSOR_ENTER;
 		} else if (x11_event.type == LeaveNotify) {
