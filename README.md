@@ -4,7 +4,7 @@ This is a cross-platform simple window framework. This library contains only two
 
 ## Version
 
-This library still hasn't reached its first major release, which means that the API might change and break backwards compatility.
+This library still hasn't reached its first major release, which means that the API might change and break backward compatility.
 
 ## Planned Support
 
