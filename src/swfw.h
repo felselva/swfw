@@ -23,6 +23,11 @@ the following restrictions:
 
 #include <stdint.h>
 #include <stdbool.h>
+
+/* Compile with X11 support if no backend is provided during compilation */
+#if !defined(SWFW_X11) && !defined(SWFW_WAYLAND)
+	#define SWFW_X11
+#endif
 #ifdef SWFW_X11
 	#include <X11/X.h>
 	#include <X11/Xlib.h>
