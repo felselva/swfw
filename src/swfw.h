@@ -175,10 +175,6 @@ struct swfw_context_x11 {
 struct swfw_window_x11 {
 	Window window;
 	XIC ic;
-	double cursor_x;
-	double cursor_y;
-	int32_t window_x;
-	int32_t window_y;
 	struct swfw_context_x11 *swfw_ctx_x11;
 	bool use_hardware_acceleration;
 #ifdef SWFW_EGL
