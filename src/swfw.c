@@ -531,12 +531,12 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 }
 
 /* Context */
-int32_t swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
+bool swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
 {
 	struct swfw_event e = {0};
 	XEvent x11_event = {0};
-	int32_t count = XPending(swfw_ctx_x11->display);
-	if (count) {
+	bool has_event = false;
+	if (XPending(swfw_ctx_x11->display) > 0) {
 		XNextEvent(swfw_ctx_x11->display, &x11_event);
 		if (x11_event.type == Expose) {
 			e.type = SWFW_EVENT_EXPOSE;
@@ -594,9 +594,12 @@ int32_t swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_e
 				e.type = SWFW_EVENT_DESTROY;
 			}
 		}
+		if (e.type != 0) {
+			has_event = true;
+		}
 	}
 	*event = e;
-	return count;
+	return has_event;
 }
 
 enum swfw_status swfw_destroy_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
@@ -843,13 +846,16 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 }
 
 /* Context */
-int32_t swfw_poll_event_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
+bool swfw_poll_event_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
 {
-	int32_t count = wl_display_dispatch_pending(swfw_ctx_wl->display);
-	if (count) {
+	bool has_event = false;
+	if (wl_display_dispatch_pending(swfw_ctx_wl->display) > 0) {
 		*event = swfw_ctx_wl->event;
+		if (swfw_ctx_wl->event.type != 0) {
+			has_event = true;
+		}
 	}
-	return count;
+	return has_event;
 }
 
 enum swfw_status swfw_destroy_context_wl(struct swfw_context_wl *swfw_ctx_wl)
@@ -1264,19 +1270,19 @@ enum swfw_status swfw_hint_use_hardware_acceleration(struct swfw_context *swfw_c
 	return SWFW_OK;
 }
 
-int32_t swfw_poll_event(struct swfw_context *swfw_ctx, struct swfw_event *event)
+bool swfw_poll_event(struct swfw_context *swfw_ctx, struct swfw_event *event)
 {
-	int32_t count = 0;
+	bool has_event = false;
 	if (swfw_ctx->backend == SWFW_BACKEND_X11) {
 #ifdef SWFW_X11
-		count = swfw_poll_event_x11(&swfw_ctx->swfw_ctx_x11, event);
+		has_event = swfw_poll_event_x11(&swfw_ctx->swfw_ctx_x11, event);
 #endif
 	} else if (swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
 #ifdef SWFW_WAYLAND
-		count = swfw_poll_event_wl(&swfw_ctx->swfw_ctx_wl, event);
+		has_event = swfw_poll_event_wl(&swfw_ctx->swfw_ctx_wl, event);
 #endif
 	}
-	return count;
+	return has_event;
 }
 
 enum swfw_status swfw_destroy_context(struct swfw_context *swfw_ctx)
