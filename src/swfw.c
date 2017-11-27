@@ -866,6 +866,7 @@ static void pointer_listener_button(void *data, struct wl_pointer *pointer, uint
 	} else {
 		e.type = SWFW_EVENT_BUTTON_RELEASE;
 	}
+	e.button = button;
 	swfw_ctx_wl->event = e;
 }
 

@@ -118,6 +118,7 @@ struct swfw_event {
 	uint32_t key_code;
 	double x;
 	double y;
+	uint32_t button;
 	uint32_t axis;
 	double scroll;
 };
