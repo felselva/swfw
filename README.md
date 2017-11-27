@@ -17,6 +17,13 @@ This library still hasn't reached its first major release, which means that the 
   - Web (using Emscripten) `not-started`
   - Mobile (Android and iOS) `not-started`
 
+- Graphic APIs:
+  - No hardware acceleration
+  - GL
+  - Vulkan
+
+The graphic APIs will be supported depending on the platform.
+
 ## Building
 
 This project doesn't include a build system because it's intended that you add the files `swfw.c` and `swfw.h` in the build system of your project.
