@@ -24,9 +24,9 @@ int32_t main(void)
 		abort();
 	}
 	swfw_window_swap_interval(&swfw_win, 1);
-	swfw_set_window_title(&swfw_win, "Simple");
 	swfw_set_window_resizable(&swfw_win, false);
 	swfw_show_window(&swfw_win);
+	swfw_set_window_title(&swfw_win, "Simple");
 	while (running) {
 		while (swfw_poll_event(&swfw_ctx, &event)) {
 			if (event.type == SWFW_EVENT_KEY_PRESS) {
