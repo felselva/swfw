@@ -64,6 +64,7 @@ static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ct
 		status = SWFW_ERROR;
 		goto done;
 	}
+	status = SWFW_ERROR;
 	while (i < egl_num_configs) {
 		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_SURFACE_TYPE, &val_EGL_SURFACE_TYPE);
 		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_COLOR_BUFFER_TYPE, &val_EGL_COLOR_BUFFER_TYPE);
@@ -83,6 +84,7 @@ static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ct
 		val_EGL_DEPTH_SIZE != 0) {
 			egl_conf = configs[i];
 			i = egl_num_configs;
+			status = SWFW_OK;
 		}
 		i++;
 	}
