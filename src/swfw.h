@@ -43,6 +43,7 @@ the following restrictions:
 #ifdef SWFW_WAYLAND
 	#include <wayland-server.h>
 	#include <wayland-client.h>
+	#include <wayland-client-protocol.h>
 	#ifndef SWFW_NO_HARDWARE_ACCELERATION
 		#define SWFW_EGL
 	#endif
@@ -196,6 +197,8 @@ struct swfw_context_wl {
 	struct wl_seat *seat;
 	struct wl_pointer *pointer;
 	struct wl_keyboard *keyboard;
+	struct wl_shm *shm;
+	bool has_xrgb;
 	uint32_t pointer_serial;
 	struct swfw_event event;
 };

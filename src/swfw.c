@@ -973,8 +973,20 @@ static void seat_listener_capabilities(void *data, struct wl_seat *seat, enum wl
 	}
 }
 
+static void shm_listener_format(void *data, struct wl_shm *wl_shm, uint32_t format)
+{
+	struct swfw_context_wl *swfw_ctx_wl = data;
+	if (format == WL_SHM_FORMAT_XRGB8888) {
+		swfw_ctx_wl->has_xrgb = true;
+	}
+}
+
 static struct wl_seat_listener seat_listener = {
 	seat_listener_capabilities
+};
+
+struct wl_shm_listener shm_listener = {
+	shm_listener_format
 };
 
 static void registry_listener_global(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
@@ -987,6 +999,9 @@ static void registry_listener_global(void *data, struct wl_registry *registry, u
 	} else if (!strcmp(interface, "wl_seat")) {
 		swfw_ctx_wl->seat = wl_registry_bind(registry, name, &wl_seat_interface, 1);
 		wl_seat_add_listener(swfw_ctx_wl->seat, &seat_listener, swfw_ctx_wl);
+	} else if (!strcmp(interface, "wl_shm")) {
+		swfw_ctx_wl->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
+		wl_shm_add_listener(swfw_ctx_wl->shm, &shm_listener, swfw_ctx_wl);
 	}
 }
 
@@ -1005,16 +1020,18 @@ enum swfw_status swfw_make_context_wl(struct swfw_context_wl *swfw_ctx_wl)
 	struct wl_registry *registry = NULL;
 	swfw_ctx_wl->display = wl_display_connect(NULL);
 	if (!swfw_ctx_wl->display) {
-		abort();
+		status = SWFW_ERROR;
+		goto done;
 	}
 	registry = wl_display_get_registry(swfw_ctx_wl->display);
 	wl_registry_add_listener(registry, &registry_listener, swfw_ctx_wl);
 	wl_display_dispatch(swfw_ctx_wl->display);
 	wl_display_roundtrip(swfw_ctx_wl->display);
 	wl_display_roundtrip(swfw_ctx_wl->display);
-	if (!swfw_ctx_wl->compositor || !swfw_ctx_wl->shell) {
+	if (!swfw_ctx_wl->compositor || !swfw_ctx_wl->shell || !swfw_ctx_wl->seat || !swfw_ctx_wl->shm) {
 		status = SWFW_ERROR;
 	}
+done:
 	return status;
 }
 #endif /* SWFW_WAYLAND */
