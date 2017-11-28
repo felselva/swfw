@@ -24,6 +24,14 @@ This library still hasn't reached its first major release, which means that the 
 
 The graphic APIs will be supported depending on the platform.
 
+- Input:
+  - Keyboard `in-progress`
+  - Mouse `in-progress`
+  - Tablet `not-started`
+  - Controller `not-started`
+
+As controller and tablet input are not used by everyone, especially by small developers, it will be possible to disable their implementation in compilation time using macros. By default, their implementation will be enabled.
+
 ## Building
 
 This project doesn't include a build system because it's intended that you add the files `swfw.c` and `swfw.h` in the build system of your project.
