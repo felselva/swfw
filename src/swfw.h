@@ -54,10 +54,6 @@ the following restrictions:
 	#endif
 #endif
 
-#define DEFAULT_HINT_USE_HARDWARE_ACCELERATION true
-#define DEFAULT_HINT_SIZE_WIDTH 256
-#define DEFAULT_HINT_SIZE_HEIGHT 256
-
 enum swfw_status {
 	SWFW_OK,
 	SWFW_ERROR,

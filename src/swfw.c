@@ -23,6 +23,10 @@ the following restrictions:
 #include <string.h>
 #include "swfw.h"
 
+#define DEFAULT_HINT_USE_HARDWARE_ACCELERATION true
+#define DEFAULT_HINT_SIZE_WIDTH 256
+#define DEFAULT_HINT_SIZE_HEIGHT 256
+
 #ifdef SWFW_EGL
 static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ctx)
 {
