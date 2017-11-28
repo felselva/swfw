@@ -29,6 +29,7 @@ the following restrictions:
 	#define SWFW_X11
 #endif
 #ifdef SWFW_X11
+	#include <locale.h>
 	#include <X11/X.h>
 	#include <X11/Xlib.h>
 	#include <X11/Xutil.h>
@@ -119,6 +120,9 @@ enum swfw_event_type {
 struct swfw_event {
 	enum swfw_event_type type;
 	uint32_t key_code;
+	uint32_t key_sym;
+	char string[5];
+	int32_t string_length;
 	double x;
 	double y;
 	uint32_t button;
@@ -144,10 +148,13 @@ struct swfw_context_x11 {
 	int screen;
 	int depth;
 	XIM im;
+	XIMStyles *styles;
+	XIMStyle xim_requested_style;
 	Window root;
 	XSetWindowAttributes attributes;
 	Colormap colormap;
 	unsigned long mask;
+	XContext context;
 	Atom atom_WM_PROTOCOLS;
 	Atom atom_WM_STATE;
 	Atom atom_WM_DELETE_WINDOW;

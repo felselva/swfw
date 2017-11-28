@@ -505,6 +505,16 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 	} else {
 		status = SWFW_ERROR;
 	}
+	if (swfw_win_x11->swfw_ctx_x11->im) {
+		swfw_win_x11->ic = XCreateIC(swfw_win_x11->swfw_ctx_x11->im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, swfw_win_x11->window, NULL);
+		if (swfw_win_x11->ic) {
+			XSetICFocus(swfw_win_x11->ic);
+		}
+	}
+	XSaveContext(swfw_win_x11->swfw_ctx_x11->display,
+		swfw_win_x11->window,
+		swfw_win_x11->swfw_ctx_x11->context,
+		(char *)swfw_win_x11);
 	swfw_win_x11->use_hardware_acceleration = hints.use_hardware_acceleration;
 #ifdef SWFW_EGL
 	if (swfw_win_x11->use_hardware_acceleration) {
@@ -540,13 +550,34 @@ bool swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_even
 	struct swfw_event e = {0};
 	XEvent x11_event = {0};
 	bool has_event = false;
+	struct swfw_window_x11 *swfw_win_x11 = NULL;
+	bool event_filtered = false;
 	if (XPending(swfw_ctx_x11->display) > 0) {
 		XNextEvent(swfw_ctx_x11->display, &x11_event);
+		if (XFilterEvent(&x11_event, None)) {
+			event_filtered = true;
+		}
+		if (XFindContext(swfw_ctx_x11->display, x11_event.xany.window, swfw_ctx_x11->context, (char **)&swfw_win_x11) != 0) {
+			abort();
+		}
 		if (x11_event.type == Expose) {
 			e.type = SWFW_EVENT_EXPOSE;
 		} else if (x11_event.type == KeyPress) {
+			KeySym keysym = 0;
+			Status status = 0;
 			e.type = SWFW_EVENT_KEY_PRESS;
 			e.key_code = x11_event.xkey.keycode;
+			if (swfw_win_x11->ic) {
+				e.string_length = Xutf8LookupString(swfw_win_x11->ic, &x11_event.xkey, e.string, 4, &keysym, &status);
+				if ((status == XLookupChars || status == XLookupBoth) && status != XBufferOverflow) {
+					if (event_filtered) {
+						e.string_length = 0;
+					}
+				} else {
+					e.string_length = 0;
+				}
+				e.key_sym = keysym;
+			}
 		} else if (x11_event.type == KeyRelease) {
 			e.type = SWFW_EVENT_KEY_RELEASE;
 			e.key_code = x11_event.xkey.keycode;
@@ -615,6 +646,21 @@ enum swfw_status swfw_destroy_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
 enum swfw_status swfw_make_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
 {
 	enum swfw_status status = SWFW_OK;
+	bool locale_ok = true;
+	if (setlocale(LC_ALL, "") == NULL) {
+		locale_ok = false;
+	}
+	if (locale_ok) {
+		if (!XSupportsLocale()) {
+			locale_ok = false;
+		}
+	}
+	if (locale_ok) {
+		if (XSetLocaleModifiers("@im=none") == NULL) {
+			locale_ok = false;
+		}
+	}
+	/* Display */
 	swfw_ctx_x11->display = XOpenDisplay(NULL);
 	swfw_ctx_x11->screen = XDefaultScreen(swfw_ctx_x11->display);
 	swfw_ctx_x11->visual = XDefaultVisual(swfw_ctx_x11->display, swfw_ctx_x11->screen);
@@ -646,6 +692,17 @@ enum swfw_status swfw_make_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
 	swfw_ctx_x11->atom_NET_WORKAREA = XInternAtom(swfw_ctx_x11->display, "_NET_WORKAREA", True);
 	swfw_ctx_x11->atom_NET_WM_BYPASS_COMPOSITOR = XInternAtom(swfw_ctx_x11->display, "_NET_WM_BYPASS_COMPOSITOR", False);
 	swfw_ctx_x11->atom_MOTIF_WM_HINTS = XInternAtom(swfw_ctx_x11->display, "_MOTIF_WM_HINTS", True);
+	if (locale_ok) {
+		swfw_ctx_x11->im = XOpenIM(swfw_ctx_x11->display, NULL, NULL, NULL);
+		if (swfw_ctx_x11->im) {
+			char *arg = XGetIMValues(swfw_ctx_x11->im, XNQueryInputStyle, &swfw_ctx_x11->styles, NULL);
+			if (arg) {
+				XCloseIM(swfw_ctx_x11->im); 
+				swfw_ctx_x11->im = NULL;
+			}
+		}
+	}
+	swfw_ctx_x11->context = XUniqueContext();
 	return status;
 }
 #endif /* SWFW_X11 */

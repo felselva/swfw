@@ -30,7 +30,12 @@ int32_t main(void)
 	while (running) {
 		while (swfw_poll_event(&swfw_ctx, &event)) {
 			if (event.type == SWFW_EVENT_KEY_PRESS) {
-				printf("Event: key %d pressed.\n", event.key_code);
+				if (event.key_code) {
+					printf("Event: key %d pressed.\n", event.key_code);
+				}
+				if (event.string_length) {
+					printf("       utf %.*s pressed.\n", event.string_length, event.string);
+				}
 			} else if (event.type == SWFW_EVENT_KEY_RELEASE) {
 				printf("Event: key %d released.\n", event.key_code);
 			} else if (event.type == SWFW_EVENT_BUTTON_PRESS) {
