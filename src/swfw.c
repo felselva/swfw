@@ -227,7 +227,6 @@ struct x11_hints {
 	uint64_t status;
 };
 
-/* Window */
 enum swfw_status swfw_drag_window_x11(struct swfw_window_x11 *swfw_win_x11)
 {
 	Window child;
@@ -553,7 +552,6 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 	return status;
 }
 
-/* Context */
 bool swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
 {
 	struct swfw_event e = {0};
@@ -1004,7 +1002,6 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 	return status;
 }
 
-/* Context */
 bool swfw_poll_event_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
 {
 	bool has_event = false;
