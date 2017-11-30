@@ -145,7 +145,7 @@ struct swfw_context_x11 {
 	Display *display;
 	Visual *visual;
 	Screen *screen;
-	int depth;
+	int32_t depth;
 	XIM im;
 	XIMStyles *styles;
 	XIMStyle xim_requested_style;
