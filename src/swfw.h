@@ -266,6 +266,8 @@ enum swfw_status swfw_make_window(struct swfw_context *swfw_ctx, struct swfw_win
 enum swfw_status swfw_hint_window_size(struct swfw_context *swfw_ctx, int32_t width, int32_t height);
 enum swfw_status swfw_hint_gl_version(struct swfw_context *swfw_ctx, int32_t major, int32_t minor);
 enum swfw_status swfw_hint_use_hardware_acceleration(struct swfw_context *swfw_ctx, bool use_hardware_acceleration);
+enum swfw_status swfw_get_screen_size(struct swfw_context *swfw_ctx, int32_t i, int32_t *width, int32_t *height);
+enum swfw_status swfw_get_screens(struct swfw_context *swfw_ctx, int32_t *i);
 bool swfw_poll_event(struct swfw_context *swfw_ctx, struct swfw_event *event);
 enum swfw_status swfw_destroy_context(struct swfw_context *swfw_ctx);
 enum swfw_status swfw_make_context(struct swfw_context *swfw_ctx, enum swfw_backend backend);

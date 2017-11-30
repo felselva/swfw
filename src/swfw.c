@@ -552,6 +552,25 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 	return status;
 }
 
+enum swfw_status swfw_get_screen_size_x11(struct swfw_context_x11 *swfw_ctx_x11, int32_t i, int32_t *width, int32_t *height)
+{
+	enum swfw_status status = SWFW_OK;
+	if (i > XScreenCount(swfw_ctx_x11->display)) {
+		status = SWFW_ERROR;
+		goto done;
+	}
+	*width = XWidthOfScreen(swfw_ctx_x11->screen);
+	*height = XHeightOfScreen(swfw_ctx_x11->screen);
+done:
+	return status;
+}
+
+enum swfw_status swfw_get_screens_x11(struct swfw_context_x11 *swfw_ctx_x11, int32_t *i)
+{
+	*i = XScreenCount(swfw_ctx_x11->display);
+	return SWFW_OK;
+}
+
 bool swfw_poll_event_x11(struct swfw_context_x11 *swfw_ctx_x11, struct swfw_event *event)
 {
 	struct swfw_event e = {0};
@@ -1002,6 +1021,16 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 	return status;
 }
 
+enum swfw_status swfw_get_screen_size_wl(struct swfw_context_wl *swfw_ctx_wl, int32_t i, int32_t *width, int32_t *height)
+{
+	return SWFW_UNSUPPORTED;
+}
+
+enum swfw_status swfw_get_screens_wl(struct swfw_context_wl *swfw_ctx_wl, int32_t *i)
+{
+	return SWFW_UNSUPPORTED;
+}
+
 bool swfw_poll_event_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_event *event)
 {
 	bool has_event = false;
@@ -1440,6 +1469,36 @@ enum swfw_status swfw_hint_use_hardware_acceleration(struct swfw_context *swfw_c
 {
 	swfw_ctx->hints.use_hardware_acceleration = use_hardware_acceleration;
 	return SWFW_OK;
+}
+
+enum swfw_status swfw_get_screen_size(struct swfw_context *swfw_ctx, int32_t i, int32_t *width, int32_t *height)
+{
+	enum swfw_status status = SWFW_INVALID_BACKEND;
+	if (swfw_ctx->backend == SWFW_BACKEND_X11) {
+#ifdef SWFW_X11
+		status = swfw_get_screen_size_x11(&swfw_ctx->swfw_ctx_x11, i, width, height);
+#endif
+	} else if (swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
+#ifdef SWFW_WAYLAND
+		status = swfw_get_screen_size_wl(&swfw_ctx->swfw_ctx_wl, i, width, height);
+#endif
+	}
+	return status;
+}
+
+enum swfw_status swfw_get_screens(struct swfw_context *swfw_ctx, int32_t *i)
+{
+	enum swfw_status status = SWFW_INVALID_BACKEND;
+	if (swfw_ctx->backend == SWFW_BACKEND_X11) {
+#ifdef SWFW_X11
+		status = swfw_get_screens_x11(&swfw_ctx->swfw_ctx_x11, i);
+#endif
+	} else if (swfw_ctx->backend == SWFW_BACKEND_WAYLAND) {
+#ifdef SWFW_WAYLAND
+		status = swfw_get_screens_wl(&swfw_ctx->swfw_ctx_wl, i);
+#endif
+	}
+	return status;
 }
 
 bool swfw_poll_event(struct swfw_context *swfw_ctx, struct swfw_event *event)

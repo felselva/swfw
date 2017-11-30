@@ -13,10 +13,15 @@ int32_t main(void)
 	enum swfw_status status = SWFW_OK;
 	struct swfw_event event = {0};
 	bool running = true;
+	int32_t screen_width = 0;
+	int32_t screen_height = 0;
 	status = swfw_make_context(&swfw_ctx, SWFW_BACKEND_AUTOMATIC);
 	if (status != SWFW_OK) {
 		printf("Error: failed to create context.\n");
 		abort();
+	}
+	if (swfw_get_screen_size(&swfw_ctx, 0, &screen_width, &screen_height) == SWFW_OK) {
+		printf("Screen size: %d, %d.\n", screen_width, screen_height);
 	}
 	status = swfw_make_window(&swfw_ctx, &swfw_win);
 	if (status != SWFW_OK) {
