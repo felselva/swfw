@@ -957,7 +957,18 @@ enum swfw_status swfw_destroy_window_wl(struct swfw_window_wl *swfw_win_wl)
 	return SWFW_OK;
 }
 
-static const struct wl_surface_listener surface_listener = {0};
+void surface_listener_enter(void *data, struct wl_surface *wl_surface, struct wl_output *output)
+{
+}
+
+static void surface_listener_leave(void *data, struct wl_surface *wl_surface, struct wl_output *output)
+{
+}
+
+static const struct wl_surface_listener surface_listener = {
+	surface_listener_enter,
+	surface_listener_leave
+};
 
 enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct swfw_window_wl *swfw_win_wl, struct swfw_hints hints)
 {
@@ -1166,6 +1177,23 @@ static void shm_listener_format(void *data, struct wl_shm *wl_shm, uint32_t form
 	}
 }
 
+static void output_listener_geometry(void *data, struct wl_output *output,
+	int32_t x, int32_t y, int32_t width, int32_t height, int32_t subpixel, const char *make, const char *model, int32_t transform)
+{
+}
+
+static void output_listener_mode(void *data, struct wl_output *wl_output, uint32_t flags, int32_t width, int32_t height, int32_t refresh)
+{
+}
+
+static void output_listener_done(void *data, struct wl_output *wl_output)
+{
+}
+
+static void output_listener_scale(void *data, struct wl_output *wl_output, int32_t factor)
+{
+}
+
 static struct wl_seat_listener seat_listener = {
 	seat_listener_capabilities
 };
@@ -1174,8 +1202,16 @@ struct wl_shm_listener shm_listener = {
 	shm_listener_format
 };
 
+struct wl_output_listener output_listener = {
+	output_listener_geometry,
+	output_listener_mode,
+	output_listener_done,
+	output_listener_scale
+};
+
 static void registry_listener_global(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
 {
+	struct wl_output *output = NULL;
 	struct swfw_context_wl *swfw_ctx_wl = data;
 	if (!strcmp(interface, "wl_compositor")) {
 		swfw_ctx_wl->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 1);
@@ -1187,6 +1223,9 @@ static void registry_listener_global(void *data, struct wl_registry *registry, u
 	} else if (!strcmp(interface, "wl_shm")) {
 		swfw_ctx_wl->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
 		wl_shm_add_listener(swfw_ctx_wl->shm, &shm_listener, swfw_ctx_wl);
+	} else if (!strcmp(interface, "wl_output")) {
+		output = wl_registry_bind(registry, name, &wl_output_interface, 1);
+		wl_output_add_listener(output, &output_listener, swfw_ctx_wl);
 	}
 }
 
