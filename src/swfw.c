@@ -35,7 +35,7 @@ the following restrictions:
 #define DEFAULT_HINT_SIZE_HEIGHT 256
 
 #ifdef SWFW_EGL
-static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ctx)
+static enum swfw_status swfw_egl_get_config(struct swfw_context_egl *swfw_ctx_egl)
 {
 	enum swfw_status status = SWFW_OK;
 	EGLConfig egl_conf = {0};
@@ -51,7 +51,7 @@ static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ct
 	EGLint val_EGL_DEPTH_SIZE = 0;
 	EGLBoolean result = false;
 	EGLint i = 0;
-	result = eglGetConfigs(swfw_egl_ctx->display, NULL, 0, &egl_num_configs);
+	result = eglGetConfigs(swfw_ctx_egl->display, NULL, 0, &egl_num_configs);
 	if (result != EGL_TRUE) {
 		status = SWFW_ERROR;
 		goto done;
@@ -65,7 +65,7 @@ static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ct
 		status = SWFW_ERROR;
 		goto done;
 	}
-	result = eglGetConfigs(swfw_egl_ctx->display, configs, egl_num_configs, &egl_num_configs);
+	result = eglGetConfigs(swfw_ctx_egl->display, configs, egl_num_configs, &egl_num_configs);
 	if (result != EGL_TRUE) {
 		free(configs);
 		status = SWFW_ERROR;
@@ -73,14 +73,14 @@ static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ct
 	}
 	status = SWFW_ERROR;
 	while (i < egl_num_configs) {
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_SURFACE_TYPE, &val_EGL_SURFACE_TYPE);
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_COLOR_BUFFER_TYPE, &val_EGL_COLOR_BUFFER_TYPE);
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_RENDERABLE_TYPE, &val_EGL_RENDERABLE_TYPE);
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_RED_SIZE, &val_EGL_RED_SIZE);
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_GREEN_SIZE, &val_EGL_GREEN_SIZE);
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_BLUE_SIZE, &val_EGL_BLUE_SIZE);
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_ALPHA_SIZE, &val_EGL_ALPHA_SIZE);
-		eglGetConfigAttrib(swfw_egl_ctx->display, configs[i], EGL_DEPTH_SIZE, &val_EGL_DEPTH_SIZE);
+		eglGetConfigAttrib(swfw_ctx_egl->display, configs[i], EGL_SURFACE_TYPE, &val_EGL_SURFACE_TYPE);
+		eglGetConfigAttrib(swfw_ctx_egl->display, configs[i], EGL_COLOR_BUFFER_TYPE, &val_EGL_COLOR_BUFFER_TYPE);
+		eglGetConfigAttrib(swfw_ctx_egl->display, configs[i], EGL_RENDERABLE_TYPE, &val_EGL_RENDERABLE_TYPE);
+		eglGetConfigAttrib(swfw_ctx_egl->display, configs[i], EGL_RED_SIZE, &val_EGL_RED_SIZE);
+		eglGetConfigAttrib(swfw_ctx_egl->display, configs[i], EGL_GREEN_SIZE, &val_EGL_GREEN_SIZE);
+		eglGetConfigAttrib(swfw_ctx_egl->display, configs[i], EGL_BLUE_SIZE, &val_EGL_BLUE_SIZE);
+		eglGetConfigAttrib(swfw_ctx_egl->display, configs[i], EGL_ALPHA_SIZE, &val_EGL_ALPHA_SIZE);
+		eglGetConfigAttrib(swfw_ctx_egl->display, configs[i], EGL_DEPTH_SIZE, &val_EGL_DEPTH_SIZE);
 		if (val_EGL_SURFACE_TYPE & EGL_WINDOW_BIT &&
 		val_EGL_COLOR_BUFFER_TYPE & EGL_RGB_BUFFER &&
 		val_EGL_RENDERABLE_TYPE & EGL_OPENGL_ES2_BIT &&
@@ -96,46 +96,46 @@ static enum swfw_status swfw_egl_get_config(struct swfw_egl_context *swfw_egl_ct
 		i++;
 	}
 	free(configs);
-	swfw_egl_ctx->config = egl_conf;
+	swfw_ctx_egl->config = egl_conf;
 done:
 	return status;
 }
 
-static enum swfw_status swfw_egl_swap_interval(struct swfw_egl_context *swfw_egl_ctx, int32_t interval)
+static enum swfw_status swfw_egl_swap_interval(struct swfw_context_egl *swfw_ctx_egl, int32_t interval)
 {
 	enum swfw_status status = SWFW_OK;
-	eglSwapInterval(swfw_egl_ctx->display, interval);
+	eglSwapInterval(swfw_ctx_egl->display, interval);
 	if (eglGetError() != EGL_SUCCESS) {
 		status = SWFW_ERROR;
 	}
 	return status;
 }
 
-static enum swfw_status swfw_egl_swap_buffers(struct swfw_egl_context *swfw_egl_ctx)
+static enum swfw_status swfw_egl_swap_buffers(struct swfw_context_egl *swfw_ctx_egl)
 {
 	enum swfw_status status = SWFW_OK;
-	eglSwapBuffers(swfw_egl_ctx->display, swfw_egl_ctx->surface);
+	eglSwapBuffers(swfw_ctx_egl->display, swfw_ctx_egl->surface);
 	if (eglGetError() != EGL_SUCCESS) {
 		status = SWFW_ERROR;
 	}
 	return status;
 }
 
-static enum swfw_status initialize_egl(struct swfw_egl_context *swfw_egl_ctx, void *native_display)
+static enum swfw_status initialize_egl(struct swfw_context_egl *swfw_ctx_egl, void *native_display)
 {
 	enum swfw_status status = SWFW_OK;
-	swfw_egl_ctx->display = eglGetDisplay(native_display);
-	if (swfw_egl_ctx->display == EGL_NO_DISPLAY) {
+	swfw_ctx_egl->display = eglGetDisplay(native_display);
+	if (swfw_ctx_egl->display == EGL_NO_DISPLAY) {
 		status = SWFW_ERROR;
 	} else {
-		if (eglInitialize(swfw_egl_ctx->display, &swfw_egl_ctx->major, &swfw_egl_ctx->minor) != EGL_TRUE) {
+		if (eglInitialize(swfw_ctx_egl->display, &swfw_ctx_egl->major, &swfw_ctx_egl->minor) != EGL_TRUE) {
 			status = SWFW_ERROR;
 		}
 	}
 	return status;
 }
 
-static enum swfw_status swfw_egl_create_context(struct swfw_egl_context *swfw_egl_ctx)
+static enum swfw_status swfw_egl_create_context(struct swfw_context_egl *swfw_ctx_egl)
 {
 	enum swfw_status status = SWFW_OK;
 	EGLint context_attribs[] = {
@@ -146,38 +146,38 @@ static enum swfw_status swfw_egl_create_context(struct swfw_egl_context *swfw_eg
 		status = SWFW_ERROR;
 		goto done;
 	}
-	swfw_egl_ctx->context = eglCreateContext(swfw_egl_ctx->display,
-		swfw_egl_ctx->config,
+	swfw_ctx_egl->context = eglCreateContext(swfw_ctx_egl->display,
+		swfw_ctx_egl->config,
 		EGL_NO_CONTEXT,
 		context_attribs);
-	if (swfw_egl_ctx->context == EGL_NO_CONTEXT) {
+	if (swfw_ctx_egl->context == EGL_NO_CONTEXT) {
 		status = SWFW_ERROR;
 	}
 done:
 	return status;
 }
 
-static enum swfw_status swfw_egl_create_surface(struct swfw_egl_context *swfw_egl_ctx, EGLNativeWindowType native_window)
+static enum swfw_status swfw_egl_create_surface(struct swfw_context_egl *swfw_ctx_egl, EGLNativeWindowType native_window)
 {
 	enum swfw_status status = SWFW_OK;
 	EGLint egl_surf_attr[] = {
 		EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
 		EGL_NONE
 	};
-	swfw_egl_ctx->surface = eglCreateWindowSurface(swfw_egl_ctx->display,
-		swfw_egl_ctx->config,
+	swfw_ctx_egl->surface = eglCreateWindowSurface(swfw_ctx_egl->display,
+		swfw_ctx_egl->config,
 		native_window,
 		egl_surf_attr);
-	if (swfw_egl_ctx->surface == EGL_NO_SURFACE) {
+	if (swfw_ctx_egl->surface == EGL_NO_SURFACE) {
 		status = SWFW_ERROR;
 	}
 	return status;
 }
 
-static enum swfw_status swfw_egl_make_current(struct swfw_egl_context *swfw_egl_ctx)
+static enum swfw_status swfw_egl_make_current(struct swfw_context_egl *swfw_ctx_egl)
 {
 	enum swfw_status status = SWFW_OK;
-	if (eglMakeCurrent(swfw_egl_ctx->display, swfw_egl_ctx->surface, swfw_egl_ctx->surface, swfw_egl_ctx->context) == EGL_FALSE) {
+	if (eglMakeCurrent(swfw_ctx_egl->display, swfw_ctx_egl->surface, swfw_ctx_egl->surface, swfw_ctx_egl->context) == EGL_FALSE) {
 		status = SWFW_ERROR;
 	}
 	return status;
@@ -469,7 +469,7 @@ enum swfw_status swfw_window_swap_interval_x11(struct swfw_window_x11 *swfw_win_
 {
 	enum swfw_status status = SWFW_OK;
 #ifdef SWFW_EGL
-	status = swfw_egl_swap_interval(&swfw_win_x11->swfw_egl_ctx, interval);
+	status = swfw_egl_swap_interval(&swfw_win_x11->swfw_ctx_egl, interval);
 #endif
 	return status;
 }
@@ -478,7 +478,7 @@ enum swfw_status swfw_window_swap_buffers_x11(struct swfw_window_x11 *swfw_win_x
 {
 	enum swfw_status status = SWFW_OK;
 #ifdef SWFW_EGL
-	status = swfw_egl_swap_buffers(&swfw_win_x11->swfw_egl_ctx);
+	status = swfw_egl_swap_buffers(&swfw_win_x11->swfw_ctx_egl);
 #endif
 	return status;
 }
@@ -527,19 +527,19 @@ enum swfw_status swfw_make_window_x11(struct swfw_context_x11 *swfw_ctx_x11, str
 	swfw_win_x11->use_hardware_acceleration = hints.use_hardware_acceleration;
 #ifdef SWFW_EGL
 	if (swfw_win_x11->use_hardware_acceleration) {
-		if (initialize_egl(&swfw_win_x11->swfw_egl_ctx, swfw_ctx_x11->display) != SWFW_OK) {
+		if (initialize_egl(&swfw_win_x11->swfw_ctx_egl, swfw_ctx_x11->display) != SWFW_OK) {
 			abort();
 		}
-		if (swfw_egl_get_config(&swfw_win_x11->swfw_egl_ctx) != SWFW_OK) {
+		if (swfw_egl_get_config(&swfw_win_x11->swfw_ctx_egl) != SWFW_OK) {
 			abort();
 		}
-		if (swfw_egl_create_context(&swfw_win_x11->swfw_egl_ctx) != SWFW_OK) {
+		if (swfw_egl_create_context(&swfw_win_x11->swfw_ctx_egl) != SWFW_OK) {
 			abort();
 		}
-		if (swfw_egl_create_surface(&swfw_win_x11->swfw_egl_ctx, (EGLNativeWindowType)swfw_win_x11->window) != SWFW_OK) {
+		if (swfw_egl_create_surface(&swfw_win_x11->swfw_ctx_egl, (EGLNativeWindowType)swfw_win_x11->window) != SWFW_OK) {
 			abort();
 		}
-		if (swfw_egl_make_current(&swfw_win_x11->swfw_egl_ctx) != SWFW_OK) {
+		if (swfw_egl_make_current(&swfw_win_x11->swfw_ctx_egl) != SWFW_OK) {
 			abort();
 		}
 		glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -910,7 +910,7 @@ enum swfw_status swfw_window_swap_interval_wl(struct swfw_window_wl *swfw_win_wl
 	enum swfw_status status = SWFW_OK;
 #ifdef SWFW_EGL
 	if (swfw_win_wl->use_hardware_acceleration) {
-		status = swfw_egl_swap_interval(&swfw_win_wl->swfw_egl_ctx, interval);
+		status = swfw_egl_swap_interval(&swfw_win_wl->swfw_ctx_egl, interval);
 	}
 #endif
 	return status;
@@ -921,7 +921,7 @@ enum swfw_status swfw_window_swap_buffers_wl(struct swfw_window_wl *swfw_win_wl)
 	enum swfw_status status = SWFW_OK;
 #ifdef SWFW_EGL
 	if (swfw_win_wl->use_hardware_acceleration) {
-		status = swfw_egl_swap_buffers(&swfw_win_wl->swfw_egl_ctx);
+		status = swfw_egl_swap_buffers(&swfw_win_wl->swfw_ctx_egl);
 	}
 #endif
 	return status;
@@ -973,10 +973,10 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 	swfw_win_wl->use_hardware_acceleration = hints.use_hardware_acceleration;
 #ifdef SWFW_EGL
 	if (swfw_win_wl->use_hardware_acceleration) {
-		if (initialize_egl(&swfw_win_wl->swfw_egl_ctx, swfw_ctx_wl->display) != SWFW_OK) {
+		if (initialize_egl(&swfw_win_wl->swfw_ctx_egl, swfw_ctx_wl->display) != SWFW_OK) {
 			abort();
 		}
-		if (swfw_egl_get_config(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
+		if (swfw_egl_get_config(&swfw_win_wl->swfw_ctx_egl) != SWFW_OK) {
 			abort();
 		}
 		swfw_win_wl->egl_window = wl_egl_window_create(swfw_win_wl->surface,
@@ -984,13 +984,13 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 		if (!swfw_win_wl->egl_window) {
 			abort();
 		}
-		if (swfw_egl_create_context(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
+		if (swfw_egl_create_context(&swfw_win_wl->swfw_ctx_egl) != SWFW_OK) {
 			abort();
 		}
-		if (swfw_egl_create_surface(&swfw_win_wl->swfw_egl_ctx, (EGLNativeWindowType)swfw_win_wl->egl_window) != SWFW_OK) {
+		if (swfw_egl_create_surface(&swfw_win_wl->swfw_ctx_egl, (EGLNativeWindowType)swfw_win_wl->egl_window) != SWFW_OK) {
 			abort();
 		}
-		if (swfw_egl_make_current(&swfw_win_wl->swfw_egl_ctx) != SWFW_OK) {
+		if (swfw_egl_make_current(&swfw_win_wl->swfw_ctx_egl) != SWFW_OK) {
 			abort();
 		}
 		glClearColor(0.0, 0.0, 0.0, 1.0);

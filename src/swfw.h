@@ -130,7 +130,7 @@ struct swfw_event {
 };
 
 #ifdef SWFW_EGL
-struct swfw_egl_context {
+struct swfw_context_egl {
 	EGLint major;
 	EGLint minor;
 	EGLDisplay display;
@@ -186,7 +186,7 @@ struct swfw_window_x11 {
 	struct swfw_context_x11 *swfw_ctx_x11;
 	bool use_hardware_acceleration;
 #ifdef SWFW_EGL
-	struct swfw_egl_context swfw_egl_ctx;
+	struct swfw_context_egl swfw_ctx_egl;
 #endif
 };
 #endif
@@ -218,7 +218,7 @@ struct swfw_window_wl {
 	bool use_hardware_acceleration;
 #ifdef SWFW_EGL
 	struct wl_egl_window *egl_window;
-	struct swfw_egl_context swfw_egl_ctx;
+	struct swfw_context_egl swfw_ctx_egl;
 #endif
 };
 #endif
