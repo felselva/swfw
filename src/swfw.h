@@ -144,7 +144,7 @@ struct swfw_context_egl {
 struct swfw_context_x11 {
 	Display *display;
 	Visual *visual;
-	int screen;
+	Screen *screen;
 	int depth;
 	XIM im;
 	XIMStyles *styles;

@@ -669,10 +669,10 @@ enum swfw_status swfw_make_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
 	}
 	/* Display */
 	swfw_ctx_x11->display = XOpenDisplay(NULL);
-	swfw_ctx_x11->screen = XDefaultScreen(swfw_ctx_x11->display);
-	swfw_ctx_x11->visual = XDefaultVisual(swfw_ctx_x11->display, swfw_ctx_x11->screen);
-	swfw_ctx_x11->root = XRootWindow(swfw_ctx_x11->display, swfw_ctx_x11->screen);
-	swfw_ctx_x11->depth = XDefaultDepth(swfw_ctx_x11->display, swfw_ctx_x11->screen);
+	swfw_ctx_x11->screen = XDefaultScreenOfDisplay(swfw_ctx_x11->display);
+	swfw_ctx_x11->visual = XDefaultVisualOfScreen(swfw_ctx_x11->screen);
+	swfw_ctx_x11->root = XRootWindowOfScreen(swfw_ctx_x11->screen);
+	swfw_ctx_x11->depth = XDefaultDepthOfScreen(swfw_ctx_x11->screen);
 	swfw_ctx_x11->colormap = XCreateColormap(swfw_ctx_x11->display,
 		swfw_ctx_x11->root,
 		swfw_ctx_x11->visual,
