@@ -42,7 +42,6 @@ the following restrictions:
 	#endif
 #endif
 #ifdef SWFW_WAYLAND
-	#include <wayland-server.h>
 	#include <wayland-client.h>
 	#include <wayland-client-protocol.h>
 	#ifndef SWFW_NO_HARDWARE_ACCELERATION
@@ -210,6 +209,12 @@ struct swfw_window_wl {
 	struct wl_surface *surface;
 	struct wl_shell_surface *shell_surface;
 	struct swfw_context_wl *swfw_ctx_wl;
+	struct wl_buffer *buffer;
+	uint32_t *shm_data;
+	int32_t fd;
+	struct wl_shm_pool *shm_pool;
+	int32_t width;
+	int32_t height;
 	bool use_hardware_acceleration;
 #ifdef SWFW_EGL
 	struct wl_egl_window *egl_window;

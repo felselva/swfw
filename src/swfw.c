@@ -23,6 +23,13 @@ the following restrictions:
 #include <string.h>
 #include "swfw.h"
 
+#ifdef SWFW_WAYLAND
+	#include <syscall.h>
+	#include <fcntl.h>
+	#include <unistd.h>
+	#include <sys/mman.h>
+#endif
+
 #define DEFAULT_HINT_USE_HARDWARE_ACCELERATION true
 #define DEFAULT_HINT_SIZE_WIDTH 256
 #define DEFAULT_HINT_SIZE_HEIGHT 256
@@ -710,6 +717,61 @@ enum swfw_status swfw_make_context_x11(struct swfw_context_x11 *swfw_ctx_x11)
 #endif /* SWFW_X11 */
 
 #ifdef SWFW_WAYLAND
+
+#ifndef SWFW_WAYLAND_TMP_FILE_TEMPLATE
+#define SWFW_WAYLAND_TMP_FILE_TEMPLATE "/swfwsoXXXXXX"
+#endif
+
+static int32_t swfw_wl_create_file(off_t size)
+{
+	static const char template[] = SWFW_WAYLAND_TMP_FILE_TEMPLATE;
+	const char *path = NULL;
+	char *tmp_name = NULL;
+	int32_t fd = -1;
+	path = getenv("XDG_RUNTIME_DIR");
+	if (!path) {
+		goto done;
+	}
+	tmp_name = calloc(strlen(path) + sizeof(template) + 1, sizeof(char));
+	if (!tmp_name) {
+		goto done;
+	}
+	strcpy(tmp_name, path);
+	strcat(tmp_name, template);
+#ifdef HAVE_MKOSTEMP
+	fd = mkostemp(tmp_name, O_CLOEXEC | O_TMPFILE);
+#else
+	fd = mkstemp(tmp_name);
+	if (fd >= 0) {
+		long flags = fcntl(fd, F_GETFD);
+		if (flags == -1) {
+			close(fd);
+			fd = -1;
+		} else if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC)) {
+			close(fd);
+			fd = -1;
+		}
+	}
+#endif
+	if (fd < 0) {
+		goto done;
+	}
+	if (unlink(tmp_name)) {
+		close(fd);
+		fd = -1;
+		goto done;
+	}
+	if (ftruncate(fd, size) < 0) {
+		close(fd);
+		fd = -1;
+	}
+done:
+	if (tmp_name) {
+		free(tmp_name);
+	}
+	return fd;
+}
+
 static void shell_surface_ping(void *data, struct wl_shell_surface *shell_surface, uint32_t serial)
 {
 	wl_shell_surface_pong(shell_surface, serial);
@@ -719,6 +781,8 @@ static void shell_surface_configure(void *data, struct wl_shell_surface *shell_s
 {
 	struct swfw_window_wl *swfw_win_wl = data;
 	struct wl_region *region = NULL;
+	swfw_win_wl->width = width;
+	swfw_win_wl->height = height;
 	region = wl_compositor_create_region(swfw_win_wl->swfw_ctx_wl->compositor);
 	wl_region_add(region, 0, 0, width, height);
 	wl_surface_set_opaque_region(swfw_win_wl->surface, region);
@@ -741,7 +805,6 @@ static void swfw_wl_create_shell_surface(struct swfw_window_wl *swfw_win_wl)
 	swfw_win_wl->shell_surface = wl_shell_get_shell_surface(swfw_win_wl->swfw_ctx_wl->shell, swfw_win_wl->surface);
 	wl_shell_surface_add_listener(swfw_win_wl->shell_surface, &shell_surface_listener, swfw_win_wl);
 	wl_shell_surface_set_toplevel(swfw_win_wl->shell_surface);
-	wl_surface_commit(swfw_win_wl->surface);
 }
 
 enum swfw_status swfw_drag_window_wl(struct swfw_window_wl *swfw_win_wl)
@@ -786,14 +849,21 @@ enum swfw_status swfw_resize_window_wl(struct swfw_window_wl *swfw_win_wl, enum 
 
 enum swfw_status swfw_hide_window_wl(struct swfw_window_wl *swfw_win_wl)
 {
-	return SWFW_UNSUPPORTED;
+	if (swfw_win_wl->surface) {
+		wl_surface_attach(swfw_win_wl->surface, NULL, 0, 0);
+		wl_surface_commit(swfw_win_wl->surface);
+		wl_display_dispatch(swfw_win_wl->swfw_ctx_wl->display);
+	}
+	return SWFW_OK;
 }
 
 enum swfw_status swfw_show_window_wl(struct swfw_window_wl *swfw_win_wl)
 {
-	if (!swfw_win_wl->shell_surface) {
-		swfw_wl_create_shell_surface(swfw_win_wl);
+	if (swfw_win_wl->surface) {
+		wl_surface_attach(swfw_win_wl->surface, swfw_win_wl->buffer, 0, 0);
 	}
+	wl_surface_commit(swfw_win_wl->surface);
+	wl_display_dispatch(swfw_win_wl->swfw_ctx_wl->display);
 	return SWFW_OK;
 }
 
@@ -839,7 +909,9 @@ enum swfw_status swfw_window_swap_interval_wl(struct swfw_window_wl *swfw_win_wl
 {
 	enum swfw_status status = SWFW_OK;
 #ifdef SWFW_EGL
-	status = swfw_egl_swap_interval(&swfw_win_wl->swfw_egl_ctx, interval);
+	if (swfw_win_wl->use_hardware_acceleration) {
+		status = swfw_egl_swap_interval(&swfw_win_wl->swfw_egl_ctx, interval);
+	}
 #endif
 	return status;
 }
@@ -848,13 +920,23 @@ enum swfw_status swfw_window_swap_buffers_wl(struct swfw_window_wl *swfw_win_wl)
 {
 	enum swfw_status status = SWFW_OK;
 #ifdef SWFW_EGL
-	status = swfw_egl_swap_buffers(&swfw_win_wl->swfw_egl_ctx);
+	if (swfw_win_wl->use_hardware_acceleration) {
+		status = swfw_egl_swap_buffers(&swfw_win_wl->swfw_egl_ctx);
+	}
 #endif
 	return status;
 }
 
 enum swfw_status swfw_destroy_window_wl(struct swfw_window_wl *swfw_win_wl)
 {
+	if (swfw_win_wl->buffer) {
+		wl_surface_attach(swfw_win_wl->surface, NULL, 0, 0);
+		wl_buffer_destroy(swfw_win_wl->buffer);
+		wl_shm_pool_destroy(swfw_win_wl->shm_pool);
+		close(swfw_win_wl->fd);
+	}
+	wl_surface_destroy(swfw_win_wl->surface);
+	wl_shell_surface_destroy(swfw_win_wl->shell_surface);
 	return SWFW_OK;
 }
 
@@ -864,16 +946,30 @@ enum swfw_status swfw_make_window_wl(struct swfw_context_wl *swfw_ctx_wl, struct
 {
 	enum swfw_status status = SWFW_OK;
 	struct wl_region *region = NULL;
+	swfw_win_wl->width = hints.width;
+	swfw_win_wl->height = hints.height;
 	/* Wayland surface */
 	swfw_win_wl->swfw_ctx_wl = swfw_ctx_wl;
 	swfw_win_wl->surface = wl_compositor_create_surface(swfw_ctx_wl->compositor);
 	wl_surface_add_listener(swfw_win_wl->surface, &surface_listener, swfw_win_wl);
+	swfw_wl_create_shell_surface(swfw_win_wl);
 	/* Opaque region */
 	region = wl_compositor_create_region(swfw_win_wl->swfw_ctx_wl->compositor);
 	wl_region_add(region, 0, 0, hints.width, hints.height);
 	wl_surface_set_opaque_region(swfw_win_wl->surface, region);
 	wl_surface_commit(swfw_win_wl->surface);
 	wl_region_destroy(region);
+	/* Buffer */
+	swfw_win_wl->fd = swfw_wl_create_file(swfw_win_wl->width * 4 * swfw_win_wl->height);
+	if (swfw_win_wl->fd >= 0) {
+		swfw_win_wl->shm_data = mmap(NULL, swfw_win_wl->width * 4 * swfw_win_wl->height, PROT_READ | PROT_WRITE, MAP_SHARED, swfw_win_wl->fd, 0);
+		swfw_win_wl->shm_pool = wl_shm_create_pool(swfw_win_wl->swfw_ctx_wl->shm, swfw_win_wl->fd, swfw_win_wl->width * 4 * swfw_win_wl->height);
+	}
+	if (swfw_win_wl->shm_pool) {
+		swfw_win_wl->buffer = wl_shm_pool_create_buffer(swfw_win_wl->shm_pool, 0,
+			swfw_win_wl->width, swfw_win_wl->height, swfw_win_wl->width * 4, WL_SHM_FORMAT_XRGB8888);
+	}
+	/* Hardware acceleration */
 	swfw_win_wl->use_hardware_acceleration = hints.use_hardware_acceleration;
 #ifdef SWFW_EGL
 	if (swfw_win_wl->use_hardware_acceleration) {
@@ -1089,7 +1185,6 @@ enum swfw_status swfw_make_context_wl(struct swfw_context_wl *swfw_ctx_wl)
 	registry = wl_display_get_registry(swfw_ctx_wl->display);
 	wl_registry_add_listener(registry, &registry_listener, swfw_ctx_wl);
 	wl_display_dispatch(swfw_ctx_wl->display);
-	wl_display_roundtrip(swfw_ctx_wl->display);
 	wl_display_roundtrip(swfw_ctx_wl->display);
 	if (!swfw_ctx_wl->compositor || !swfw_ctx_wl->shell || !swfw_ctx_wl->seat || !swfw_ctx_wl->shm) {
 		status = SWFW_ERROR;
